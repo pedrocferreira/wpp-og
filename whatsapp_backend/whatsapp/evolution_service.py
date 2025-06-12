@@ -60,24 +60,53 @@ class EvolutionService:
                 "linkPreview": True  # Habilita preview de links se houver
             }
             
-            logger.info(f"Enviando mensagem para {phone}: {message}")
-            logger.info(f"URL: {url}")
-            logger.info(f"Data: {json.dumps(data)}")
+            # Log usando formatação correta
+            logger.info("Enviando mensagem para %s: %s", phone, message)
+            logger.info("URL: %s", url)
+            logger.info("Data: %s", json.dumps(data))
             
             response = requests.post(url, headers=self.headers, json=data)
             response.raise_for_status()
             
-            logger.info(f"Mensagem enviada com sucesso para {phone}")
+            logger.info("Mensagem enviada com sucesso para %s", phone)
             return response.json()
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"Erro ao enviar mensagem: {str(e)}")
+            logger.error("Erro ao enviar mensagem: %s", str(e))
             raise
 
-    def process_webhook(self, data: dict) -> dict:
-        """Processa os dados recebidos do webhook"""
+    def _get_or_create_client(self, phone: str, name: str = None) -> Client:
+        """
+        Busca ou cria um cliente com base no número do WhatsApp
+        """
         try:
-            logger.info(f"Processando webhook: {json.dumps(data)}")
+            # Remove o '@s.whatsapp.net' se existir no número
+            phone = phone.replace('@s.whatsapp.net', '')
+            
+            # Busca ou cria o cliente
+            client, created = Client.objects.get_or_create(
+                whatsapp=phone,
+                defaults={
+                    'name': name or phone,
+                    'phone': phone
+                }
+            )
+            
+            # Se o cliente já existia mas não tinha nome, atualiza
+            if not created and name and not client.name:
+                client.name = name
+                client.save()
+            
+            return client
+            
+        except Exception as e:
+            logger.error("Erro ao buscar/criar cliente: %s", str(e))
+            raise
+
+    def process_webhook(self, data):
+        try:
+            # Log usando json.dumps para objetos complexos
+            logger.info("Processando webhook: %s", json.dumps(data))
             
             # Verifica se é uma mensagem recebida
             if data.get('event') == 'messages.upsert' and 'data' in data:
@@ -92,49 +121,52 @@ class EvolutionService:
                 client_number = message_data.get('key', {}).get('remoteJid', '').split('@')[0]
                 
                 if not client_number:
-                    logger.error("Número do cliente não encontrado na mensagem")
+                    logger.error("Número do cliente não encontrado")
                     return None
 
-                # Extrai o conteúdo da mensagem
-                content = None
-                message = message_data.get('message', {})
-                
-                if 'conversation' in message:
-                    content = message['conversation']
-                elif 'extendedTextMessage' in message:
-                    content = message['extendedTextMessage'].get('text')
-                elif 'imageMessage' in message:
-                    content = message['imageMessage'].get('caption', 'Imagem recebida')
-                elif 'videoMessage' in message:
-                    content = message['videoMessage'].get('caption', 'Vídeo recebido')
-                elif 'audioMessage' in message:
-                    content = 'Áudio recebido'
-                elif 'documentMessage' in message:
-                    content = 'Documento recebido'
-                
-                if not content:
-                    logger.error("Conteúdo da mensagem não encontrado")
+                # Processa a mensagem - agora lidando com o novo formato
+                message_content = message_data.get('message', {}).get('conversation', '')
+                if not message_content and message_data.get('message'):
+                    # Tenta outros campos possíveis de mensagem
+                    message_obj = message_data.get('message', {})
+                    if 'extendedTextMessage' in message_obj:
+                        message_content = message_obj['extendedTextMessage'].get('text', '')
+                    elif 'imageMessage' in message_obj:
+                        message_content = message_obj['imageMessage'].get('caption', 'Imagem recebida')
+                    elif 'videoMessage' in message_obj:
+                        message_content = message_obj['videoMessage'].get('caption', 'Vídeo recebido')
+                    elif 'documentMessage' in message_obj:
+                        message_content = message_obj['documentMessage'].get('fileName', 'Documento recebido')
+                    elif 'audioMessage' in message_obj:
+                        message_content = 'Áudio recebido'
+                    elif 'stickerMessage' in message_obj:
+                        message_content = 'Sticker recebido'
+
+                if not message_content:
+                    logger.info("Mensagem sem conteúdo")
                     return None
+
+                # Busca ou cria o cliente
+                client = self._get_or_create_client(client_number, message_data.get('pushName', ''))
                 
-                # Criar ou obter cliente
-                client, _ = Client.objects.get_or_create(
-                    whatsapp=client_number,
-                    defaults={"name": f"Cliente {client_number}"}
-                )
-                
-                # Criar mensagem
+                # Cria a mensagem
                 whatsapp_message = WhatsAppMessage.objects.create(
                     client=client,
-                    message_type="incoming",
-                    content=content,
-                    status='received'
+                    content=message_content,
+                    direction='RECEIVED',
+                    message_id=message_data.get('key', {}).get('id', '')
                 )
                 
-                logger.info(f"Mensagem processada com sucesso: {whatsapp_message.id}")
+                # Log usando json.dumps para objetos complexos
+                log_data = {
+                    'id': whatsapp_message.id,
+                    'client': client_number,
+                    'content': message_content
+                }
+                logger.info("Mensagem processada com sucesso: %s", json.dumps(log_data))
                 return whatsapp_message
-            
-            return None
-            
+
         except Exception as e:
-            logger.error(f"Erro ao processar webhook: {str(e)}")
-            return None 
+            error_msg = str(e)
+            logger.error("Erro ao processar webhook: %s", error_msg)
+            raise Exception(error_msg) 

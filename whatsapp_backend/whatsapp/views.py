@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from django.conf import settings
-from .models import WhatsAppMessage, WebhookLog, AIResponse
-from appointments.models import Client
+from .models import WhatsAppMessage, WebhookLog, AIResponse, Message, Conversation
+from appointments.models import Client, Appointment
 from .services import EvolutionAPIService
 from .test_response import TestAIService
 from rest_framework.decorators import action, api_view, permission_classes
@@ -12,6 +12,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from .evolution_service import EvolutionService
+from .ai_service import AIService, IntentProcessor
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -32,52 +34,63 @@ class WebhookView(APIView):
             evolution_service = EvolutionAPIService()
             ai_service = TestAIService()
             
-            webhook_data = evolution_service.process_webhook(request.data)
+            data = request.data
+            if data.get('type') == 'message':
+                message_data = data.get('message', {})
+                if message_data.get('fromMe'):
+                    return Response(status=200)
+                
+                conversation = Conversation.objects.get_or_create(
+                    whatsapp_id=message_data.get('from')
+                )[0]
+                
+                # Salva a mensagem recebida
+                received_message = Message.objects.create(
+                    conversation=conversation,
+                    content=message_data.get('body'),
+                    is_from_bot=False
+                )
+                
+                # Processa com IA
+                ai_service = AIService()
+                conversation_history = Message.objects.filter(
+                    conversation=conversation
+                ).order_by('-created_at')[:5]
+                
+                response = ai_service.process_message(
+                    message_data.get('body'),
+                    context={'conversation_history': conversation_history}
+                )
+                
+                # Identifica a intenção
+                intent = IntentProcessor.identify_intent(message_data.get('body'))
+                
+                # Se for agendamento, processa especialmente
+                if intent == 'agendamento':
+                    # Aqui você pode adicionar lógica específica para agendamento
+                    # Por exemplo, criar um Appointment ou iniciar um fluxo de coleta de dados
+                    pass
+                
+                # Salva e envia a resposta
+                bot_message = Message.objects.create(
+                    conversation=conversation,
+                    content=response,
+                    is_from_bot=True
+                )
+                
+                # Envia resposta via Evolution API
+                evolution_service.send_message(
+                    message_data.get('from'),
+                    response
+                )
             
-            if not webhook_data:
-                return Response({'status': 'ignored'}, status=status.HTTP_200_OK)
-
-            # Busca ou cria o cliente
-            client, created = Client.objects.get_or_create(
-                whatsapp=webhook_data['whatsapp_number'],
-                defaults={'name': f"Cliente {webhook_data['whatsapp_number']}"}
-            )
-
-            # Cria a mensagem
-            message = WhatsAppMessage.objects.create(
-                client=client,
-                message_type='incoming',
-                content=webhook_data['content'],
-                status='received'
-            )
-
-            # Processa com IA
-            ai_response = ai_service.process_message(
-                webhook_data['content'],
-                context={'client_name': client.name}
-            )
-
-            # Salva a resposta da IA
-            AIResponse.objects.create(
-                message=message,
-                response_text=ai_response['response_text'],
-                confidence_score=ai_response['confidence_score'],
-                intent_detected=ai_response['intent_detected']
-            )
-
-            # Envia resposta via WhatsApp
-            evolution_service.send_message(
-                client.whatsapp,
-                ai_response['response_text']
-            )
-
             webhook_log.processed = True
             webhook_log.save()
 
             return Response({'status': 'processed'}, status=status.HTTP_200_OK)
 
         except Exception as e:
-            logger.error(f"Erro ao processar webhook: {str(e)}")
+            logger.error("Erro ao processar webhook - %s", str(e))
             if 'webhook_log' in locals():
                 webhook_log.error_message = str(e)
                 webhook_log.save()
@@ -96,7 +109,7 @@ class ConnectionStatusView(APIView):
             status_data = evolution_service.get_connection_status()
             return Response(status_data)
         except Exception as e:
-            logger.error(f"Erro ao verificar status: {str(e)}")
+            logger.error("Erro ao verificar status - %s", str(e))
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -112,7 +125,7 @@ class DisconnectView(APIView):
             result = evolution_service.disconnect()
             return Response(result)
         except Exception as e:
-            logger.error(f"Erro ao desconectar: {str(e)}")
+            logger.error("Erro ao desconectar - %s", str(e))
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -171,7 +184,8 @@ def evolution_webhook(request):
     Endpoint para receber webhooks do Evolution API
     """
     try:
-        logger.info("Webhook recebido: %s", request.data)
+        # Log usando json.dumps para objetos complexos
+        logger.info("Webhook recebido: %s", json.dumps(request.data))
         
         # Registra o webhook
         webhook_log = WebhookLog.objects.create(
@@ -180,47 +194,36 @@ def evolution_webhook(request):
 
         # Processa o webhook
         evolution_service = EvolutionService()
-        ai_service = TestAIService()
+        ai_service = AIService()
         
         # Processa a mensagem recebida
         whatsapp_message = evolution_service.process_webhook(request.data)
-        
+
         if whatsapp_message:
-            logger.info(f"Mensagem processada: {whatsapp_message}")
-            
             # Processa com IA
-            ai_response = ai_service.process_message(
+            response = ai_service.process_message(
                 whatsapp_message.content,
-                context={'client_name': whatsapp_message.client.name}
+                context={'client_id': whatsapp_message.client.id}
             )
-
-            # Salva a resposta da IA
-            AIResponse.objects.create(
-                message=whatsapp_message,
-                response_text=ai_response['response_text'],
-                confidence_score=ai_response['confidence_score'],
-                intent_detected=ai_response['intent_detected']
-            )
-
-            # Envia resposta via WhatsApp
+            
+            # Envia resposta
             evolution_service.send_message(
                 whatsapp_message.client.whatsapp,
-                ai_response['response_text']
+                response
             )
 
-            webhook_log.processed = True
-            webhook_log.save()
-            
-            return Response({'status': 'processed'}, status=status.HTTP_200_OK)
-        
-        return Response({'status': 'ignored'}, status=status.HTTP_200_OK)
+        webhook_log.processed = True
+        webhook_log.save()
+
+        return Response({'status': 'processed'}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        logger.error(f"Erro ao processar webhook: {str(e)}")
+        error_msg = str(e)
+        logger.error("Erro ao processar webhook: %s", error_msg)
         if 'webhook_log' in locals():
-            webhook_log.error_message = str(e)
+            webhook_log.error_message = error_msg
             webhook_log.save()
         return Response(
-            {'error': str(e)},
+            {'error': error_msg},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

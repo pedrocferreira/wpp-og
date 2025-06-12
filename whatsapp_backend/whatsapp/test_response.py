@@ -3,27 +3,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 class TestAIService:
-    def process_message(self, message: str, context: dict = None) -> dict:
+    def process_message(self, message: str, context: dict = None) -> str:
         """
         Processa uma mensagem e retorna uma resposta de teste
         """
         try:
-            logger.info(f"Processando mensagem: {message}")
+            # Log usando formatação correta
+            logger.info("Processando mensagem: %s", message)
             
-            # Resposta padrão de teste
-            return {
-                'response_text': f"Olá! Recebi sua mensagem: '{message}'. Este é um teste do sistema.",
-                'confidence_score': 1.0,
-                'intent_detected': 'test_response'
-            }
+            # Resposta fixa para teste
+            return "Olá! Esta é uma resposta de teste."
             
         except Exception as e:
-            logger.error(f"Erro ao processar mensagem com IA: {str(e)}")
-            return {
-                'response_text': "Desculpe, tive um problema ao processar sua mensagem.",
-                'confidence_score': 0.0,
-                'intent_detected': 'error'
-            }
+            logger.error("Erro ao processar mensagem com IA: %s", str(e))
+            return "Desculpe, ocorreu um erro ao processar sua mensagem."
 
     def generate_reminder_message(self, appointment):
         """

@@ -16,10 +16,8 @@ class EvolutionAPIService:
             'apikey': self.api_key
         }
 
-    def send_message(self, whatsapp_number, message, media_url=None):
-        """
-        Envia uma mensagem via WhatsApp usando a Evolution API.
-        """
+    def send_message(self, whatsapp_number: str, message: str, media_url: str = None):
+        """Envia uma mensagem via Evolution API"""
         try:
             # Remove o '@s.whatsapp.net' se existir no número
             whatsapp_number = whatsapp_number.replace('@s.whatsapp.net', '')
@@ -28,46 +26,39 @@ class EvolutionAPIService:
             
             payload = {
                 "number": whatsapp_number,
-                "text": message
+                "text": message,
+                "linkPreview": True  # Habilita preview de links se houver
             }
-
-            if media_url:
-                endpoint = f"{self.base_url}/message/sendMedia/{self.instance_id}"
-                payload["media_url"] = media_url
-
-            logger.info(f"Enviando mensagem para {whatsapp_number}: {message}")
-            logger.info(f"Endpoint: {endpoint}")
-            logger.info(f"Payload: {json.dumps(payload)}")
+            
+            # Log usando formatação correta
+            logger.info("Enviando mensagem para %s: %s", whatsapp_number, message)
+            logger.info("Endpoint: %s", endpoint)
+            logger.info("Payload: %s", json.dumps(payload))
             
             response = requests.post(
                 endpoint,
                 headers=self.headers,
                 json=payload
             )
-
-            response_data = response.json()
             
-            # Verifica se a resposta indica erro
-            if response.status_code == 404 or (isinstance(response_data, dict) and response_data.get('error')):
-                logger.error(f"Erro ao enviar mensagem: {response.text}")
-                raise ValidationError(f"Erro ao enviar mensagem: {response.text}")
-
-            logger.info(f"Mensagem enviada com sucesso: {response.text}")
-            return response_data
-
+            if not response.ok:
+                logger.error("Erro ao enviar mensagem: %s", response.text)
+                raise ValidationError(response.text)
+            
+            logger.info("Mensagem enviada com sucesso: %s", response.text)
+            return response.json()
+            
         except Exception as e:
-            logger.error(f"Erro no serviço Evolution API: {str(e)}")
+            logger.error("Erro no serviço Evolution API: %s", str(e))
             raise
 
-    def process_webhook(self, payload):
-        """
-        Processa o webhook recebido da Evolution API.
-        """
+    def process_webhook(self, data: dict):
+        """Processa um webhook recebido"""
         try:
             # Implementar lógica de processamento do webhook
             # Este é apenas um exemplo básico
-            if 'message' in payload:
-                message = payload['message']
+            if 'message' in data:
+                message = data['message']
                 return {
                     'whatsapp_number': message.get('from'),
                     'content': message.get('content'),
@@ -77,13 +68,11 @@ class EvolutionAPIService:
             return None
 
         except Exception as e:
-            logger.error(f"Erro ao processar webhook: {str(e)}")
+            logger.error("Erro ao processar webhook: %s", str(e))
             raise
 
     def get_connection_status(self):
-        """
-        Verifica o status da conexão com o WhatsApp.
-        """
+        """Verifica o status da conexão"""
         try:
             response = requests.get(
                 f"{self.base_url}/status",
@@ -91,13 +80,11 @@ class EvolutionAPIService:
             )
             return response.json()
         except Exception as e:
-            logger.error(f"Erro ao verificar status: {str(e)}")
+            logger.error("Erro ao verificar status: %s", str(e))
             raise
 
     def disconnect(self):
-        """
-        Desconecta a sessão do WhatsApp.
-        """
+        """Desconecta a sessão do WhatsApp"""
         try:
             response = requests.delete(
                 f"{self.base_url}/disconnect",
@@ -105,5 +92,5 @@ class EvolutionAPIService:
             )
             return response.json()
         except Exception as e:
-            logger.error(f"Erro ao desconectar: {str(e)}")
+            logger.error("Erro ao desconectar: %s", str(e))
             raise 

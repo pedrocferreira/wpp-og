@@ -11,41 +11,39 @@ logger = logging.getLogger(__name__)
 @shared_task
 def send_appointment_reminders():
     """
-    Envia lembretes de consultas agendadas.
+    Tarefa Celery para enviar lembretes de agendamentos
     """
     try:
-        # Busca lembretes que devem ser enviados
+        # Busca lembretes pendentes
         now = timezone.now()
         reminders = AppointmentReminder.objects.filter(
             sent=False,
-            scheduled_for__lte=now,
-            appointment__status__in=['scheduled', 'confirmed']
-        ).select_related('appointment', 'appointment__client')
-
+            scheduled_time__lte=now
+        )
+        
         evolution_service = EvolutionAPIService()
-        ai_service = AIService()
-
+        
         for reminder in reminders:
             try:
-                # Gera mensagem personalizada
-                message = ai_service.generate_reminder_message(reminder)
-                
-                # Envia mensagem via WhatsApp
+                # Envia o lembrete
                 evolution_service.send_message(
                     reminder.appointment.client.whatsapp,
-                    message
+                    reminder.message
                 )
                 
-                # Marca lembrete como enviado
-                reminder.mark_as_sent()
+                # Marca como enviado
+                reminder.sent = True
+                reminder.sent_at = now
+                reminder.save()
                 
-                logger.info(f"Lembrete enviado com sucesso: {reminder}")
+                logger.info("Lembrete enviado com sucesso - %s", str(reminder))
                 
             except Exception as e:
-                logger.error(f"Erro ao enviar lembrete {reminder.id}: {str(e)}")
-
+                logger.error("Erro ao enviar lembrete %s: %s", reminder.id, str(e))
+                continue
+                
     except Exception as e:
-        logger.error(f"Erro ao processar lembretes: {str(e)}")
+        logger.error("Erro ao processar lembretes: %s", str(e))
         raise
 
 @shared_task
