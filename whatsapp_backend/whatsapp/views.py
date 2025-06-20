@@ -194,36 +194,21 @@ def evolution_webhook(request):
 
         # Processa o webhook
         evolution_service = EvolutionService()
-        ai_service = AIService()
         
         # Processa a mensagem recebida
-        whatsapp_message = evolution_service.process_webhook(request.data)
-
-        if whatsapp_message:
-            # Processa com IA
-            response = ai_service.process_message(
-                whatsapp_message.content,
-                context={'client_id': whatsapp_message.client.id}
-            )
-            
-            # Envia resposta
-            evolution_service.send_message(
-                whatsapp_message.client.whatsapp,
-                response
-            )
-
+        evolution_service.process_webhook(request.data)
+        
         webhook_log.processed = True
         webhook_log.save()
 
         return Response({'status': 'processed'}, status=status.HTTP_200_OK)
 
     except Exception as e:
-        error_msg = str(e)
-        logger.error("Erro ao processar webhook: %s", error_msg)
+        logger.error("Erro ao processar webhook: %s", str(e))
         if 'webhook_log' in locals():
-            webhook_log.error_message = error_msg
+            webhook_log.error_message = str(e)
             webhook_log.save()
         return Response(
-            {'error': error_msg},
+            {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

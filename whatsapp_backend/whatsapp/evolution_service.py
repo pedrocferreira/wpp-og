@@ -16,8 +16,14 @@ class EvolutionService:
         self.base_url = settings.EVOLUTION_API_URL
         self.headers = {
             "Content-Type": "application/json",
-            "apikey": self.config.api_key
+            "apikey": self.config.api_key,
+            "token": self.config.api_key
         }
+        logger.info("Headers configurados: %s", json.dumps(self.headers))
+        
+        # Inicializa o serviço de IA
+        from .ai_service import AIService
+        self.ai_service = AIService()
 
     def setup_webhook(self):
         """Configura o webhook no Evolution API"""
@@ -63,13 +69,17 @@ class EvolutionService:
             # Log usando formatação correta
             logger.info("Enviando mensagem para %s: %s", phone, message)
             logger.info("URL: %s", url)
+            logger.info("Headers: %s", json.dumps(self.headers))
             logger.info("Data: %s", json.dumps(data))
             
             response = requests.post(url, headers=self.headers, json=data)
-            response.raise_for_status()
+            if response.status_code != 200:
+                logger.error("Resposta da API: %s", response.text)
+                response.raise_for_status()
             
-            logger.info("Mensagem enviada com sucesso para %s", phone)
-            return response.json()
+            result = response.json()
+            logger.info("Mensagem enviada com sucesso para %s: %s", phone, json.dumps(result))
+            return result
             
         except requests.exceptions.RequestException as e:
             logger.error("Erro ao enviar mensagem: %s", str(e))
@@ -87,8 +97,7 @@ class EvolutionService:
             client, created = Client.objects.get_or_create(
                 whatsapp=phone,
                 defaults={
-                    'name': name or phone,
-                    'phone': phone
+                    'name': name or phone
                 }
             )
             
@@ -103,70 +112,104 @@ class EvolutionService:
             logger.error("Erro ao buscar/criar cliente: %s", str(e))
             raise
 
-    def process_webhook(self, data):
+    def process_webhook(self, data: dict):
+        """Processa o webhook recebido da Evolution API"""
         try:
-            # Log usando json.dumps para objetos complexos
             logger.info("Processando webhook: %s", json.dumps(data))
             
-            # Verifica se é uma mensagem recebida
-            if data.get('event') == 'messages.upsert' and 'data' in data:
-                message_data = data['data']
+            # Extrai a chave de API do webhook
+            webhook_api_key = data.get('apikey')
+            if webhook_api_key:
+                self.headers['apikey'] = webhook_api_key
+                self.headers['token'] = webhook_api_key
+                logger.info("Headers atualizados com a chave do webhook: %s", json.dumps(self.headers))
+            
+            if data.get('event') == 'messages.upsert':
+                logger.info("Evento messages.upsert detectado")
+                message_data = data.get('data', {})
+                if not message_data:
+                    logger.warning("Dados da mensagem não encontrados")
+                    return
                 
-                # Ignora mensagens enviadas pelo próprio bot
-                if message_data.get('key', {}).get('fromMe', False):
-                    logger.info("Ignorando mensagem enviada pelo bot")
-                    return None
+                # Extrai informações da mensagem
+                key = message_data.get('key', {})
+                message = message_data.get('message', {})
+                message_type = message_data.get('messageType')  # Campo correto
                 
-                # Extrai o número do remetente
-                client_number = message_data.get('key', {}).get('remoteJid', '').split('@')[0]
+                logger.info("Key extraída: %s", json.dumps(key))
+                logger.info("Message extraída: %s", json.dumps(message))
+                logger.info("MessageType: %s", message_type)
                 
-                if not client_number:
-                    logger.error("Número do cliente não encontrado")
-                    return None
-
-                # Processa a mensagem - agora lidando com o novo formato
-                message_content = message_data.get('message', {}).get('conversation', '')
-                if not message_content and message_data.get('message'):
-                    # Tenta outros campos possíveis de mensagem
-                    message_obj = message_data.get('message', {})
-                    if 'extendedTextMessage' in message_obj:
-                        message_content = message_obj['extendedTextMessage'].get('text', '')
-                    elif 'imageMessage' in message_obj:
-                        message_content = message_obj['imageMessage'].get('caption', 'Imagem recebida')
-                    elif 'videoMessage' in message_obj:
-                        message_content = message_obj['videoMessage'].get('caption', 'Vídeo recebido')
-                    elif 'documentMessage' in message_obj:
-                        message_content = message_obj['documentMessage'].get('fileName', 'Documento recebido')
-                    elif 'audioMessage' in message_obj:
-                        message_content = 'Áudio recebido'
-                    elif 'stickerMessage' in message_obj:
-                        message_content = 'Sticker recebido'
-
-                if not message_content:
-                    logger.info("Mensagem sem conteúdo")
-                    return None
-
-                # Busca ou cria o cliente
-                client = self._get_or_create_client(client_number, message_data.get('pushName', ''))
-                
-                # Cria a mensagem
-                whatsapp_message = WhatsAppMessage.objects.create(
-                    client=client,
-                    content=message_content,
-                    direction='RECEIVED',
-                    message_id=message_data.get('key', {}).get('id', '')
-                )
-                
-                # Log usando json.dumps para objetos complexos
-                log_data = {
-                    'id': whatsapp_message.id,
-                    'client': client_number,
-                    'content': message_content
-                }
-                logger.info("Mensagem processada com sucesso: %s", json.dumps(log_data))
-                return whatsapp_message
-
+                # Verifica se é uma mensagem de texto
+                if message_type == 'conversation':
+                    logger.info("Mensagem de conversação detectada")
+                    content = message.get('conversation', '')
+                    if not content:
+                        logger.warning("Conteúdo da mensagem não encontrado")
+                        return
+                    
+                    logger.info("Conteúdo da mensagem: %s", content)
+                    
+                    # Extrai o número do telefone
+                    remote_jid = key.get('remoteJid', '')
+                    if not remote_jid:
+                        logger.warning("Número do telefone não encontrado")
+                        return
+                    
+                    # Remove o sufixo @s.whatsapp.net
+                    phone = remote_jid.split('@')[0]
+                    logger.info("Número do telefone extraído: %s", phone)
+                    
+                    # Busca ou cria o cliente
+                    client, created = Client.objects.get_or_create(
+                        whatsapp=phone,
+                        defaults={
+                            'name': message_data.get('pushName', 'Cliente WhatsApp'),
+                            'phone': phone
+                        }
+                    )
+                    logger.info("Cliente %s: %s", "criado" if created else "encontrado", client.whatsapp)
+                    
+                    # Salva a mensagem no banco
+                    message_obj = WhatsAppMessage.objects.create(
+                        client=client,
+                        content=content,
+                        message_type='RECEIVED',
+                        direction='RECEIVED',
+                        message_id=key.get('id', '')
+                    )
+                    logger.info("Mensagem processada com sucesso: %s", json.dumps({
+                        'id': message_obj.id,
+                        'client': client.whatsapp,
+                        'content': message_obj.content
+                    }))
+                    
+                    # Gera resposta usando o serviço de IA
+                    logger.info("Gerando resposta com IA...")
+                    response = self.ai_service.process_message(content, context={'client_id': client.id})
+                    logger.info("Resposta gerada: %s", response)
+                    
+                    # Envia a resposta
+                    try:
+                        logger.info("Enviando resposta...")
+                        result = self.send_message(phone, response)
+                        logger.info("Resposta enviada com sucesso: %s", json.dumps(result))
+                        
+                        # Salva a mensagem de resposta
+                        WhatsAppMessage.objects.create(
+                            client=client,
+                            content=response,
+                            message_type='SENT',
+                            direction='SENT',
+                            message_id=result.get('id', '')
+                        )
+                        logger.info("Mensagem de resposta salva no banco")
+                    except Exception as e:
+                        logger.error("Erro ao enviar resposta: %s", str(e))
+                        raise
+                else:
+                    logger.info("Mensagem não é de conversação, tipo: %s", message_type)
+                    
         except Exception as e:
-            error_msg = str(e)
-            logger.error("Erro ao processar webhook: %s", error_msg)
-            raise Exception(error_msg) 
+            logger.error("Erro ao processar webhook: %s", str(e))
+            raise 
