@@ -1,0 +1,64 @@
+<div class="booking-container">
+  <div class="booking-card">
+    <div *ngIf="bookingSuccess; else bookingFormContent" class="success-message">
+      <h2>Agendamento Realizado! ✅</h2>
+      <p>Sua consulta foi agendada com sucesso.</p>
+      <p>Você receberá uma mensagem de confirmação no WhatsApp em breve.</p>
+      <p>Obrigado por escolher nossos serviços! 🌸</p>
+    </div>
+
+    <ng-template #bookingFormContent>
+      <div class="card-header">
+        <h2>Agende sua Consulta</h2>
+        <p>Preencha os dados abaixo para marcar seu horário.</p>
+      </div>
+
+      <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+        <div class="form-step">
+          <label for="date">1. Escolha uma data:</label>
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Data da consulta</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="date" (dateChange)="onDateChange($event)" readonly>
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div *ngIf="isLoading && !availableSlots.length" class="loading-spinner">
+          <p>Buscando horários...</p>
+        </div>
+
+        <div *ngIf="availableSlots.length > 0" class="form-step">
+          <label>2. Escolha um horário:</label>
+          <div class="time-slots">
+            <button
+              type="button"
+              *ngFor="let time of availableSlots"
+              class="time-slot"
+              [class.selected]="bookingForm.get('time')?.value === time"
+              (click)="selectTime(time)">
+              {{ time }}
+            </button>
+          </div>
+        </div>
+        
+        <div *ngIf="bookingForm.get('time')?.value" class="form-step">
+          <label for="name">3. Seu nome completo:</label>
+          <input type="text" id="name" class="form-control" formControlName="name" placeholder="Digite seu nome">
+
+          <label for="whatsapp">4. Seu número de WhatsApp:</label>
+          <input type="tel" id="whatsapp" class="form-control" formControlName="whatsapp" placeholder="Ex: 55119... (só números)">
+        </div>
+
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="bookingForm.invalid || isLoading">
+          <span *ngIf="!isLoading">Confirmar Agendamento</span>
+          <span *ngIf="isLoading">Agendando...</span>
+        </button>
+      </form>
+    </ng-template>
+  </div>
+</div>

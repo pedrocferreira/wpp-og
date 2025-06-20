@@ -1,0 +1,141 @@
+body {
+  background-color: #f4f7f6;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.booking-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.booking-card {
+  background: white;
+  padding: 2rem 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  transition: all 0.3s ease-in-out;
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  h2 {
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  p {
+    color: #777;
+  }
+}
+
+.form-step {
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.75rem;
+}
+
+.time-slot {
+  padding: 0.75rem;
+  border: 1px solid #007bff;
+  background-color: #f0f8ff;
+  color: #007bff;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #d6eaff;
+  }
+
+  &.selected {
+    background-color: #007bff;
+    color: white;
+    font-weight: 600;
+  }
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled):hover {
+    background-color: #218838;
+  }
+}
+
+.loading-spinner, .error-message, .success-message {
+  text-align: center;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 8px;
+}
+
+.loading-spinner p {
+  color: #555;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.success-message {
+  h2 {
+    color: #155724;
+    font-size: 1.5rem;
+  }
+  p {
+    color: #155724;
+    line-height: 1.6;
+  }
+}

@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,8 +37,9 @@ ALLOWED_HOSTS = ['155.133.22.207', 'localhost', '127.0.0.1']  # Configure apropr
 CORS_ALLOW_ALL_ORIGINS = True  # Em produção, configure apropriadamente
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://155.133.22.207:4200",  # Adicione o IP do seu frontend aqui
 ]
 
 # Application definition
@@ -127,9 +132,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'pt-br'
+LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'America/Sao_Paulo'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -158,7 +163,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
 }
 
@@ -188,15 +193,17 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
 # WhatsApp Evolution API Configuration
-EVOLUTION_API_URL = 'https://evo.og-trk.xyz'
-EVOLUTION_API_KEY = '067CD1A2E662-483F-A776-C977DED90692'
-EVOLUTION_INSTANCE_ID = 'pedro'
+EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', 'https://evo.og-trk.xyz')
+EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '067CD1A2E662-483F-A776-C977DED90692')
+EVOLUTION_INSTANCE_ID = os.getenv('EVOLUTION_INSTANCE_ID', 'pedro')
 
 # OpenAI Configuration
+# Para usar OpenAI, substitua 'your-openai-api-key-here' pela sua chave real
+# Exemplo: OPENAI_API_KEY = 'sk-1234567890abcdef...'
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'your-openai-api-key-here')
 
 # AI Assistant Name
-AI_ASSISTANT_NAME = 'Elô'
+AI_ASSISTANT_NAME = os.getenv('AI_ASSISTANT_NAME', 'Elô')
 
 # Logging Configuration
 LOGGING = {

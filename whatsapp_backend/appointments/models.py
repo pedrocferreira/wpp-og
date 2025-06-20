@@ -22,10 +22,16 @@ class Appointment(models.Model):
         ('no_show', 'Não Compareceu'),
     ]
 
+    SOURCE_CHOICES = [
+        ('whatsapp', 'WhatsApp'),
+        ('site', 'Site'),
+    ]
+
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     date_time = models.DateTimeField()
     duration = models.IntegerField(default=60)  # duração em minutos
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='whatsapp')
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -64,3 +70,14 @@ class AppointmentReminder(models.Model):
     class Meta:
         ordering = ['scheduled_for']
         unique_together = ['appointment', 'reminder_type']
+
+class ConversationState(models.Model):
+    client = models.OneToOneField(Client, on_delete=models.CASCADE)
+    step = models.CharField(max_length=50, default='start')  # Ex: 'awaiting_date', 'awaiting_time', 'awaiting_type', 'completed'
+    temp_date = models.DateField(null=True, blank=True)
+    temp_time = models.TimeField(null=True, blank=True)
+    temp_type = models.CharField(max_length=100, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Estado de {self.client.name}: {self.step}"

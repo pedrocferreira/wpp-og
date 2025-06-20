@@ -19,13 +19,16 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
 from authentication.views import AuthViewSet
+from .views import home_view
 
 router = routers.DefaultRouter()
 router.register('auth', AuthViewSet, basename='auth')
 
 urlpatterns = [
+    path('', home_view, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/whatsapp/', include('whatsapp.urls')),
+    path('api/appointments/', include('appointments.urls')),
 ]

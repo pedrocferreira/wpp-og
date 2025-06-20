@@ -38,4 +38,14 @@ export class ApiService {
   agendarConsulta(consulta: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/consultas/`, consulta);
   }
+
+  // Agendamento Online
+  getAvailableTimeSlots(date: Date, consultationType: string): Observable<string[]> {
+    const formattedDate = date.toISOString().split('T')[0];
+    return this.http.get<string[]>(`${this.apiUrl}/appointments/available-slots/?date=${formattedDate}&type=${consultationType}`);
+  }
+
+  createAppointment(appointmentData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/appointments/book/`, appointmentData);
+  }
 } 

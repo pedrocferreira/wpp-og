@@ -10,274 +10,235 @@ from typing import Dict, Optional
 from .models import Message
 from authentication.models import Client
 from .models import WhatsAppMessage
-from .evolution_service import EvolutionService
 
 logger = logging.getLogger(__name__)
 
 class AIService:
     def __init__(self):
-        # Configurar o cliente OpenAI para a versão 1.3.0
+        # Configurar o cliente OpenAI
         try:
-            self.client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
-            self.openai_available = True
+            # Verifica se a chave da API está configurada
+            if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != 'your-openai-api-key-here':
+                try:
+                    # Tenta inicializar com a nova sintaxe primeiro
+                    self.client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+                    self.openai_available = True
+                    logger.info("OpenAI configurado com sucesso (nova sintaxe)")
+                except Exception as e:
+                    # Se falhar, tenta com a sintaxe antiga
+                    logger.warning("Erro com nova sintaxe, tentando sintaxe antiga: %s", str(e))
+                    openai.api_key = settings.OPENAI_API_KEY
+                    self.client = None  # Indica uso da sintaxe antiga
+                    self.openai_available = True
+                    logger.info("OpenAI configurado com sucesso (sintaxe antiga)")
+            else:
+                logger.warning("OpenAI API key não configurada, usando respostas mock")
+                self.client = None
+                self.openai_available = False
         except Exception as e:
             logger.warning("OpenAI não disponível, usando respostas mock: %s", str(e))
             self.client = None
             self.openai_available = False
             
-        self.system_prompt = f"""Você é a {settings.AI_ASSISTANT_NAME}, uma assistente virtual para agendamento de consultas.
-        Seja cordial e profissional, sempre se apresentando como {settings.AI_ASSISTANT_NAME}. 
-        
-        Suas principais funções são:
-        1. Agendar novas consultas
-        2. Remarcar consultas existentes
-        3. Cancelar consultas
-        4. Tirar dúvidas sobre horários disponíveis
-        5. Confirmar consultas agendadas
-        
-        Ao agendar consultas, você deve:
-        - Coletar data e hora desejadas
-        - Verificar disponibilidade
-        - Confirmar os dados com o cliente
-        - Gerar uma resposta estruturada em JSON com os dados do agendamento
-        
-        Formato da resposta JSON para agendamentos:
-        {{
-            "intent": "schedule_appointment",
-            "data": {{
-                "date": "YYYY-MM-DD",
-                "time": "HH:MM",
-                "description": "Descrição da consulta",
-                "action": "schedule|reschedule|cancel|confirm"
-            }}
-        }}
-        
-        Mantenha as respostas concisas e objetivas, sempre com um tom amigável e prestativo."""
+        self.system_prompt = f"""Você é a Elô, secretária virtual humanizada da Dra. Elisa Munaretti, especialista com +20 anos de experiência em saúde mental integrativa, com especialização em Homeopatia, pós-graduação em Psiquiatria e pós-graduação em Saúde Mental Integrativa. Sua função é ser o primeiro contato acolhedor e eficiente da clínica, fornecendo informações claras e precisas, tirando dúvidas dos pacientes sobre os serviços, agendamentos, valores e auxiliando no agendamento de consultas.
+
+Seu tom de voz deve ser sempre cordial, profissional, empático e acolhedor, respeitando a sensibilidade de cada paciente. Use emojis apropriados como 🌸 💛 🗓 📅.
+
+VALOR DA CONSULTA: R$ 620,00 (Pix, transferência ou parcelado até 12x no cartão)
+
+HORÁRIOS DISPONÍVEIS:
+- Segunda a Sexta: 8h às 18h  
+- Sábado: 8h às 12h
+- Domingo: Fechado
+
+EXEMPLOS DE RESPOSTAS:
+Saudação: "Oi, tudo bem? 🌸 Eu sou a Elô, secretária da Dra. Elisa Munaretti. Que bom receber sua mensagem!"
+Agendamento: "Perfeito! Vou ajudá-lo a agendar sua consulta. Para que data e horário você gostaria? 💛"
+Confirmação: "🌸 Agendamento confirmado! 🌸 Sua consulta está marcada para [data] às [hora]. O valor é R$ 620,00."
+
+SEMPRE confirme antes de finalizar um agendamento completo."""
 
     def process_message(self, message: str, context: Optional[Dict] = None) -> str:
         """
-        Processa a mensagem do usuário usando GPT para determinar a intenção e gerar resposta
+        Processa a mensagem do usuário, tratando agendamentos com um link e usando GPT para o restante.
         """
+        # Identificar a intenção primeiro
+        intent = IntentProcessor.identify_intent(message)
+
+        # Se a intenção é agendar, sempre retorna o link, sem chamar a IA
+        if intent == 'agendamento':
+            logger.info("Intenção de agendamento detectada. Enviando link de agendamento.")
+            client_whatsapp = ''
+            if context and context.get('client'):
+                client = context['client']
+                if hasattr(client, 'whatsapp'):
+                    client_whatsapp = client.whatsapp
+            
+            # A URL do frontend pode vir de settings no futuro para ser mais flexível
+            booking_link = f"http://155.133.22.207:4200/agendamento?whatsapp={client_whatsapp}"
+            
+            return f"""📅 *Agendamento de Consultas*
+
+Ótimo! Para facilitar seu agendamento, criamos um sistema online super prático! 🚀
+
+👆 *Clique no link abaixo para agendar:*
+{booking_link}
+
+✨ *Vantagens do agendamento online:*
+• 📱 Escolha a data no calendário
+• ⏰ Veja horários disponíveis em tempo real
+• 🏥 Selecione consulta presencial ou online
+• ✅ Confirmação automática por WhatsApp
+
+*Horários de atendimento:*
+• Segunda a Sexta: 08:00 às 12:00 e 14:00 às 18:00
+• Sábados: 08:00 às 13:00
+• Domingos: Fechado
+
+Após agendar, você receberá uma confirmação aqui mesmo! 😊"""
+
+        # Se não for agendamento, continua com o fluxo normal (IA ou mock)
         try:
-            # Se OpenAI não estiver disponível, usa resposta mock
+            # Se OpenAI não estiver disponível, usa resposta mock melhorada
             if not self.openai_available:
                 logger.info("Usando resposta mock para mensagem: %s", message)
-                return self._get_mock_response(message)
+                return self._get_mock_response(message, context)
             
+            # Prepara o contexto da conversa
             messages = [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": message}
+                {"role": "system", "content": self.system_prompt}
             ]
             
+            # Adiciona histórico da conversa se disponível
             if context and context.get('conversation_history'):
-                for msg in context['conversation_history']:
+                for msg in context['conversation_history'][-5:]:  # Últimas 5 mensagens
                     messages.append({
-                        "role": "assistant" if msg.is_from_bot else "user",
+                        "role": "assistant" if msg.direction == 'SENT' else "user",
                         "content": msg.content
                     })
             
-            logger.info("Enviando mensagem para OpenAI: %s", json.dumps(messages))
+            # Adiciona a mensagem atual
+            messages.append({"role": "user", "content": message})
+            
+            logger.info("Enviando mensagem para OpenAI: %s", message)
             
             try:
-                response = self.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    temperature=0.7,
-                    max_tokens=300
-                )
+                if self.client is not None:
+                    # Nova sintaxe (OpenAI >= 1.0)
+                    response = self.client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=messages,
+                        temperature=0.7,
+                        max_tokens=400,
+                        presence_penalty=0.1,
+                        frequency_penalty=0.1
+                    )
+                    response_text = response.choices[0].message.content.strip()
+                else:
+                    # Sintaxe antiga (OpenAI < 1.0)
+                    response = openai.ChatCompletion.create(
+                        model="gpt-4o-mini",
+                        messages=messages,
+                        temperature=0.7,
+                        max_tokens=400,
+                        presence_penalty=0.1,
+                        frequency_penalty=0.1
+                    )
+                    response_text = response.choices[0].message['content'].strip()
                 
-                response_text = response.choices[0].message.content
                 logger.info("Resposta recebida da OpenAI: %s", response_text)
-                
-                # Tenta processar a resposta como JSON se for um agendamento
-                try:
-                    response_data = json.loads(response_text)
-                    if response_data.get('intent') == 'schedule_appointment':
-                        self._process_appointment(response_data['data'], context)
-                except json.JSONDecodeError:
-                    # Se não for JSON, é uma resposta normal
-                    pass
-                    
                 return response_text
                 
             except Exception as e:
                 error_msg = str(e)
                 logger.error("Erro da API OpenAI: %s", error_msg)
                 
-                # Verifica tipos específicos de erro baseado na mensagem
+                # Verifica tipos específicos de erro
                 if "rate limit" in error_msg.lower():
                     return "Desculpe, estou temporariamente sobrecarregada. Por favor, tente novamente em alguns minutos."
                 elif "authentication" in error_msg.lower() or "api key" in error_msg.lower():
-                    return "Desculpe, estou tendo problemas técnicos. Por favor, entre em contato com o suporte."
+                    logger.warning("Problema de autenticação OpenAI, usando resposta mock")
+                    return self._get_mock_response(message, context)
                 else:
-                    return "Desculpe, ocorreu um erro ao processar sua mensagem. Por favor, tente novamente."
+                    logger.warning("Erro OpenAI, usando resposta mock: %s", error_msg)
+                    return self._get_mock_response(message, context)
                 
         except Exception as e:
             error_msg = str(e)
             logger.error("Erro ao processar mensagem com OpenAI: %s", error_msg)
-            return "Desculpe, estou tendo problemas para processar sua mensagem. Por favor, tente novamente em alguns instantes."
+            return self._get_mock_response(message, context)
 
-    def _get_mock_response(self, message: str) -> str:
+    def _get_mock_response(self, message: str, context: Optional[Dict] = None) -> str:
         """
-        Gera uma resposta mock baseada na mensagem recebida
+        Gera uma resposta mock inteligente baseada na mensagem recebida
         """
         message_lower = message.lower()
         
         # Respostas baseadas em palavras-chave
         if any(word in message_lower for word in ['ola', 'oi', 'olá', 'bom dia', 'boa tarde', 'boa noite']):
-            return f"Olá! Eu sou a {settings.AI_ASSISTANT_NAME}, sua assistente virtual. Como posso ajudá-lo hoje? Posso ajudar com agendamentos, informações sobre consultas ou tirar suas dúvidas."
+            return f"Oi, tudo bem? 🌸 Eu sou a Elô, secretária da Dra. Elisa Munaretti. Que bom receber sua mensagem!\n\nEstou aqui para te orientar sobre como funcionam as consultas com a Dra. Elisa, que tem mais de 20 anos de experiência cuidando da saúde mental de forma integrativa, agendamentos, valores e tudo mais que precisar.\n\nVocê gostaria de marcar um horário ou prefere saber um pouco mais antes? 💛"
         
         elif any(word in message_lower for word in ['agendar', 'marcar', 'consulta', 'agendamento']):
-            return "Claro! Vou ajudá-lo a agendar uma consulta. Para isso, preciso de algumas informações: Em que data você gostaria de agendar? E qual horário seria melhor para você?"
+            # Tentar extrair informações do contexto se disponível
+            client_whatsapp = ''
+            if context and context.get('client'):
+                client = context['client']
+                if hasattr(client, 'whatsapp'):
+                    client_whatsapp = client.whatsapp
+            
+            # Criar link de agendamento
+            booking_link = f"http://155.133.22.207:4200/agendamento?whatsapp={client_whatsapp}"
+            
+            return f"""📅 *Agendamento de Consultas*
+
+Ótimo! Para facilitar seu agendamento, criamos um sistema online super prático! 🚀
+
+👆 *Clique no link abaixo para agendar:*
+{booking_link}
+
+✨ *Vantagens do agendamento online:*
+• 📱 Escolha a data no calendário
+• ⏰ Veja horários disponíveis em tempo real
+• 🏥 Selecione consulta presencial ou online
+• ✅ Confirmação automática por WhatsApp
+
+*Horários de atendimento:*
+• Segunda a Sexta: 08:00 às 12:00 e 14:00 às 18:00
+• Sábados: 08:00 às 13:00
+• Domingos: Fechado
+
+Após agendar, você receberá uma confirmação aqui mesmo! 😊"""
         
-        elif any(word in message_lower for word in ['cancelar', 'desmarcar', 'reagendar']):
-            return "Entendi que você precisa cancelar ou reagendar uma consulta. Posso ajudá-lo com isso. Você poderia me informar qual consulta gostaria de alterar?"
+        elif any(word in message_lower for word in ['horário', 'disponibilidade', 'quando']):
+            return "Nossos horários de atendimento são:\n\n📅 Segunda a Sexta: 8h às 18h\n📅 Sábado: 8h às 12h\n📅 Domingo: Fechado\n\nTemos boa disponibilidade em diversos horários. Gostaria de agendar algo específico?"
         
-        elif any(word in message_lower for word in ['horário', 'horarios', 'disponível', 'disponibilidade']):
-            return "Nossos horários de atendimento são de segunda a sexta, das 8h às 18h. Temos disponibilidade para consultas em diversos horários. Gostaria de agendar algo específico?"
+        elif any(word in message_lower for word in ['valor', 'preço', 'custo', 'pagamento']):
+            return "O valor da consulta é R$ 620,00. Pode ser pago via Pix, transferência ou parcelado em até 12x no cartão.\n\nGostaria de agendar uma consulta? 💛"
         
-        elif any(word in message_lower for word in ['preço', 'valor', 'custo', 'quanto custa']):
-            return "Para informações sobre valores e formas de pagamento, recomendo que entre em contato diretamente conosco. Posso ajudá-lo a agendar uma consulta onde poderemos esclarecer todas as questões financeiras."
-        
-        elif any(word in message_lower for word in ['obrigado', 'obrigada', 'valeu', 'tchau', 'até logo']):
-            return "Foi um prazer ajudá-lo! Se precisar de mais alguma coisa, estarei aqui. Tenha um ótimo dia!"
+        elif any(word in message_lower for word in ['obrigado', 'obrigada', 'valeu', 'tchau']):
+            return "Foi um prazer ajudá-lo! Se precisar de mais alguma coisa, estarei aqui. Tenha um ótimo dia! 😊"
         
         else:
-            return f"Obrigada por entrar em contato! Sou a {settings.AI_ASSISTANT_NAME} e estou aqui para ajudá-lo. Posso auxiliar com agendamentos, informações sobre consultas e esclarecer suas dúvidas. Como posso ajudá-lo?"
-
-    def _process_appointment(self, appointment_data, context):
-        """
-        Processa os dados de agendamento e cria/atualiza registros no banco.
-        """
-        try:
-            # Converte data e hora para datetime
-            date_str = appointment_data['date']
-            time_str = appointment_data['time']
-            date_time = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-            
-            # Converte para timezone aware
-            tz = pytz.timezone(settings.TIME_ZONE)
-            date_time = tz.localize(date_time)
-
-            if appointment_data['action'] == 'schedule':
-                # Cria novo agendamento
-                appointment = Appointment.objects.create(
-                    client_id=context['client_id'],
-                    date_time=date_time,
-                    description=appointment_data['description'],
-                    status='scheduled'
-                )
-                
-                # Cria lembretes
-                self._create_reminders(appointment)
-                
-            elif appointment_data['action'] == 'reschedule':
-                # Atualiza agendamento existente
-                appointment = Appointment.objects.get(
-                    client_id=context['client_id'],
-                    date_time__gte=timezone.now(),
-                    status='scheduled'
-                )
-                appointment.date_time = date_time
-                appointment.save()
-                
-                # Atualiza lembretes
-                self._create_reminders(appointment)
-                
-            elif appointment_data['action'] == 'cancel':
-                # Cancela agendamento
-                appointment = Appointment.objects.get(
-                    client_id=context['client_id'],
-                    date_time__gte=timezone.now(),
-                    status='scheduled'
-                )
-                appointment.status = 'cancelled'
-                appointment.save()
-                
-            elif appointment_data['action'] == 'confirm':
-                # Confirma agendamento
-                appointment = Appointment.objects.get(
-                    client_id=context['client_id'],
-                    date_time__gte=timezone.now(),
-                    status='scheduled'
-                )
-                appointment.status = 'confirmed'
-                appointment.save()
-
-        except Exception as e:
-            logger.error("Erro ao processar agendamento: %s", str(e))
-            raise
-
-    def _create_reminders(self, appointment):
-        """
-        Cria ou atualiza lembretes para um agendamento.
-        """
-        # Remove lembretes existentes
-        AppointmentReminder.objects.filter(appointment=appointment).delete()
-        
-        # Cria novos lembretes
-        reminders = [
-            {
-                'type': '2_days',
-                'delta': timedelta(days=2)
-            },
-            {
-                'type': '1_day',
-                'delta': timedelta(days=1)
-            },
-            {
-                'type': 'same_day',
-                'delta': timedelta(hours=3)
-            }
-        ]
-        
-        for reminder in reminders:
-            AppointmentReminder.objects.create(
-                appointment=appointment,
-                reminder_type=reminder['type'],
-                scheduled_for=appointment.date_time - reminder['delta']
-            )
-
-    def generate_reminder_message(self, reminder):
-        """
-        Gera uma mensagem de lembrete personalizada.
-        """
-        appointment = reminder.appointment
-        reminder_type = reminder.get_reminder_type_display()
-        
-        return f"""Olá! Aqui é a {settings.AI_ASSISTANT_NAME}, sua assistente virtual.
-        
-        {reminder_type} da sua consulta agendada para {appointment.date_time.strftime('%d/%m/%Y às %H:%M')}.
-        
-        Por favor, confirme sua presença respondendo 'confirmo'.
-        
-        Se precisar remarcar, é só me avisar!
-        
-        Detalhes da consulta:
-        {appointment.description}"""
-
-    def process_agendamento(self, message: str, client: Client) -> str:
-        """
-        Processa uma mensagem de agendamento e retorna uma resposta apropriada
-        """
-        try:
-            # Implementar lógica de processamento de agendamento
-            pass
-        except Exception as e:
-            logger.error("Erro ao processar agendamento: %s", str(e))
-            return "Desculpe, ocorreu um erro ao processar seu agendamento."
+            return f"Oi! 🌸 Sou a Elô, secretária da Dra. Elisa Munaretti. Como posso te ajudar hoje? Posso auxiliar com agendamentos, informações sobre consultas ou tirar suas dúvidas 💛"
 
 class IntentProcessor:
     INTENTS = {
-        'agendamento': ['agendar', 'marcar', 'consulta', 'horário'],
-        'informacao': ['informação', 'dúvida', 'horário', 'preço'],
-        'cancelamento': ['cancelar', 'desmarcar', 'reagendar']
+        'agendamento': ['agendar', 'marcar', 'consulta', 'agendamento', 'marcação'],
+        'cancelamento': ['cancelar', 'desmarcar', 'cancelamento'],
+        'reagendamento': ['reagendar', 'remarcar', 'mudar data'],
+        'informacao': ['horário', 'disponibilidade', 'preço', 'valor', 'informação'],
+        'saudacao': ['oi', 'olá', 'bom dia', 'boa tarde', 'boa noite']
     }
     
     @classmethod
     def identify_intent(cls, message: str) -> str:
-        message = message.lower()
+        """
+        Identifica a intenção da mensagem baseada em palavras-chave
+        """
+        message_lower = message.lower()
+        
         for intent, keywords in cls.INTENTS.items():
-            if any(keyword in message for keyword in keywords):
+            if any(keyword in message_lower for keyword in keywords):
                 return intent
-        return 'outros' 
+        
+        return 'outro' 

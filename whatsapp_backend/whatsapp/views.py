@@ -197,7 +197,7 @@ def evolution_webhook(request):
         
         # Processa a mensagem recebida
         evolution_service.process_webhook(request.data)
-        
+
         webhook_log.processed = True
         webhook_log.save()
 
