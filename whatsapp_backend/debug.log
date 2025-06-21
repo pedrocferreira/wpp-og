@@ -5060,3 +5060,192 @@ INFO 2025-06-20 19:52:50,708 basehttp 366792 126070811694784 code 400, message B
 ERROR 2025-06-20 19:52:50,708 basehttp 366792 126070811694784 You're accessing the development server over HTTPS, but it only supports HTTP.
 INFO 2025-06-20 19:52:53,804 basehttp 366792 126070811694784 "GET / HTTP/1.1" 200 37
 INFO 2025-06-20 19:52:57,578 basehttp 366792 126070811694784 - Broken pipe from ('45.131.155.254', 47868)
+INFO 2025-06-20 19:55:16,771 autoreload 366792 126070923591808 /root/wpp-og/whatsapp_backend/whatsapp_backend/urls.py changed, reloading.
+INFO 2025-06-20 19:55:21,177 autoreload 371898 131120470298752 Watching for file changes with StatReloader
+INFO 2025-06-20 20:14:20,441 basehttp 371898 131120359274176 code 400, message Bad request syntax ('\x01\x01æ')
+WARNING 2025-06-20 20:14:20,441 basehttp 371898 131120359274176 "æ" 400 -
+INFO 2025-06-20 20:56:46,671 basehttp 371898 131120359274176 "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+WARNING 2025-06-20 20:56:47,156 log 371898 131120359274176 Bad Request: /api/auth/login/
+WARNING 2025-06-20 20:56:47,160 basehttp 371898 131120359274176 "POST /api/auth/login/ HTTP/1.1" 400 40
+WARNING 2025-06-20 20:57:17,684 log 371898 131120359274176 Bad Request: /api/auth/login/
+WARNING 2025-06-20 20:57:17,686 basehttp 371898 131120359274176 "POST /api/auth/login/ HTTP/1.1" 400 40
+WARNING 2025-06-20 20:57:22,371 log 371898 131120359274176 Bad Request: /api/auth/login/
+WARNING 2025-06-20 20:57:22,374 basehttp 371898 131120359274176 "POST /api/auth/login/ HTTP/1.1" 400 40
+WARNING 2025-06-20 20:57:26,169 log 371898 131120359274176 Bad Request: /api/auth/login/
+WARNING 2025-06-20 20:57:26,176 basehttp 371898 131120359274176 "POST /api/auth/login/ HTTP/1.1" 400 40
+WARNING 2025-06-20 20:57:56,237 log 371898 131120359274176 Bad Request: /api/auth/login/
+WARNING 2025-06-20 20:57:56,241 basehttp 371898 131120359274176 "POST /api/auth/login/ HTTP/1.1" 400 40
+INFO 2025-06-20 21:00:20,987 autoreload 371898 131120470298752 /root/wpp-og/whatsapp_backend/authentication/models.py changed, reloading.
+INFO 2025-06-20 21:00:24,713 autoreload 378138 135428660510848 Watching for file changes with StatReloader
+INFO 2025-06-20 21:00:38,891 autoreload 378138 135428660510848 /root/wpp-og/whatsapp_backend/authentication/serializers.py changed, reloading.
+INFO 2025-06-20 21:00:42,782 autoreload 378236 138495768051840 Watching for file changes with StatReloader
+INFO 2025-06-20 21:01:17,125 autoreload 378236 138495768051840 /root/wpp-og/whatsapp_backend/authentication/models.py changed, reloading.
+INFO 2025-06-20 21:01:20,580 autoreload 378416 135464610320512 Watching for file changes with StatReloader
+ERROR 2025-06-20 21:05:45,590 log 378416 135464498665152 Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/authentication/views.py", line 22, in login
+    username=serializer.validated_data['username'],
+             ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'username'
+ERROR 2025-06-20 21:05:46,019 basehttp 378416 135464498665152 "POST /api/auth/login/ HTTP/1.1" 500 96199
+ERROR 2025-06-20 21:06:36,709 log 378416 135464498665152 Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/django/core/handlers/base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/django/views/decorators/csrf.py", line 56, in wrapper_view
+    return view_func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/viewsets.py", line 125, in view
+    return self.dispatch(request, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 509, in dispatch
+    response = self.handle_exception(exc)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 469, in handle_exception
+    self.raise_uncaught_exception(exc)
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 480, in raise_uncaught_exception
+    raise exc
+  File "/root/wpp-og/whatsapp_backend/venv/lib/python3.12/site-packages/rest_framework/views.py", line 506, in dispatch
+    response = handler(request, *args, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/wpp-og/whatsapp_backend/authentication/views.py", line 22, in login
+    username=serializer.validated_data['username'],
+             ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+KeyError: 'username'
+ERROR 2025-06-20 21:06:36,720 basehttp 378416 135464498665152 "POST /api/auth/login/ HTTP/1.1" 500 96199
+INFO 2025-06-20 21:07:44,958 autoreload 378416 135464610320512 /root/wpp-og/whatsapp_backend/authentication/views.py changed, reloading.
+INFO 2025-06-20 21:07:48,531 autoreload 379120 133298915844224 Watching for file changes with StatReloader
+INFO 2025-06-20 21:08:23,734 basehttp 379120 133298738165440 "POST /api/auth/login/ HTTP/1.1" 200 674
+INFO 2025-06-20 21:10:22,935 autoreload 379120 133298915844224 /root/wpp-og/whatsapp_backend/authentication/serializers.py changed, reloading.
+INFO 2025-06-20 21:10:26,649 autoreload 379394 133846997540992 Watching for file changes with StatReloader
+INFO 2025-06-20 21:10:35,040 autoreload 379394 133846997540992 /root/wpp-og/whatsapp_backend/authentication/views.py changed, reloading.
+INFO 2025-06-20 21:10:38,471 autoreload 379462 131864821764224 Watching for file changes with StatReloader
+INFO 2025-06-20 21:10:50,456 autoreload 379462 131864821764224 /root/wpp-og/whatsapp_backend/whatsapp_backend/urls.py changed, reloading.
+INFO 2025-06-20 21:10:54,322 autoreload 379538 138775691808896 Watching for file changes with StatReloader
+WARNING 2025-06-20 21:12:42,034 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:12:42,035 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 58
+WARNING 2025-06-20 21:14:03,961 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:14:03,968 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 58
+INFO 2025-06-20 21:16:16,183 basehttp 379538 138775580636864 "OPTIONS /api/clients/ HTTP/1.1" 200 0
+WARNING 2025-06-20 21:16:16,688 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:16:16,695 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+WARNING 2025-06-20 21:16:38,116 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:16:38,117 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+INFO 2025-06-20 21:17:03,906 basehttp 379538 138775580636864 "POST /api/auth/login/ HTTP/1.1" 200 674
+WARNING 2025-06-20 21:17:04,423 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:17:04,424 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+WARNING 2025-06-20 21:18:21,441 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:18:21,445 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+WARNING 2025-06-20 21:18:57,734 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:18:57,745 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+WARNING 2025-06-20 21:20:25,560 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:20:25,576 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+WARNING 2025-06-20 21:20:26,044 log 379538 138775580636864 Unauthorized: /api/clients/
+WARNING 2025-06-20 21:20:26,054 basehttp 379538 138775580636864 "GET /api/clients/ HTTP/1.1" 401 183
+WARNING 2025-06-20 21:20:29,357 log 379538 138775580636864 Unauthorized: /api/clients/
+INFO 2025-06-20 21:20:29,388 autoreload 379538 138775691808896 /root/wpp-og/whatsapp_backend/authentication/models.py changed, reloading.
+INFO 2025-06-20 21:20:40,941 autoreload 381630 124340672548992 Watching for file changes with StatReloader
+INFO 2025-06-20 21:20:58,228 basehttp 381630 124340561508032 "POST /api/auth/login/ HTTP/1.1" 200 674
+INFO 2025-06-20 21:20:58,793 basehttp 381630 124340561508032 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:24:32,800 basehttp 381630 124340561508032 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:29:58,715 basehttp 381630 124340561508032 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:29:59,196 basehttp 381630 124340561508032 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:29:59,693 basehttp 381630 124340552066752 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:30:45,199 basehttp 381630 124340552066752 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:30:45,785 basehttp 381630 124340552066752 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:30:46,282 basehttp 381630 124340561508032 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:31:59,897 basehttp 381630 124340543674048 code 400, message Bad request syntax ('MGLNDD_155.133.22.207_8000')
+WARNING 2025-06-20 21:31:59,899 basehttp 381630 124340543674048 "MGLNDD_155.133.22.207_8000" 400 -
+INFO 2025-06-20 21:43:20,867 basehttp 381630 124340552066752 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:43:31,995 basehttp 381630 124340552066752 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-20 21:55:02,752 basehttp 381630 124340552066752 "GET /api/clients/ HTTP/1.1" 200 953
+INFO 2025-06-21 00:18:22,445 basehttp 381630 124340552066752 code 400, message Bad HTTP/0.9 request type ('\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x08\x80')
+WARNING 2025-06-21 00:18:22,447 basehttp 381630 124340552066752 "         ,>%>ô" 400 -
+INFO 2025-06-21 01:24:17,565 basehttp 381630 124340552066752 code 400, message Bad HTTP/0.9 request type ('\x16\x03\x01\x00u\x01\x00\x00q\x03\x03Hä:gËq\x87;ÌHþe!«\x14if\x9d;é!e\x96\x03Q¤j\x18ÎÂsÎ\x00\x00\x1aÀ/À+À\x11À\x07À\x13À')
+ERROR 2025-06-21 01:24:17,567 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 01:24:17,878 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x14À')
+ERROR 2025-06-21 01:24:17,885 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 01:24:18,195 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x14À')
+ERROR 2025-06-21 01:24:18,195 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 01:24:18,507 basehttp 381630 124340552066752 code 400, message Bad HTTP/0.9 request type ('\x16\x03\x01\x00u\x01\x00\x00q\x03\x03\x8dÆ<\x07makÉ\x1bÊ_\x904y\x7f@:ým4\x982ÿ>È2\x97\x96`\x08^"\x00\x00\x1aÀ/À+À\x11À\x07À\x13À')
+ERROR 2025-06-21 01:24:18,507 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 03:53:16,189 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+INFO 2025-06-21 04:21:55,247 basehttp 381630 124340552066752 "GET / HTTP/1.0" 200 37
+INFO 2025-06-21 04:33:40,007 basehttp 381630 124340552066752 code 400, message Bad request syntax ('JDWP-Handshake')
+WARNING 2025-06-21 04:33:40,007 basehttp 381630 124340552066752 "JDWP-Handshake" 400 -
+WARNING 2025-06-21 05:14:19,057 log 381630 124340552066752 Not Found: /api/v2/heartbeat
+WARNING 2025-06-21 05:14:19,065 basehttp 381630 124340552066752 "GET /api/v2/heartbeat HTTP/1.1" 404 5416
+INFO 2025-06-21 05:14:20,408 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+INFO 2025-06-21 05:18:06,679 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+WARNING 2025-06-21 05:18:07,120 log 381630 124340552066752 Not Found: /favicon.ico
+WARNING 2025-06-21 05:18:07,120 basehttp 381630 124340552066752 "GET /favicon.ico HTTP/1.1" 404 2712
+INFO 2025-06-21 05:35:15,718 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+INFO 2025-06-21 06:01:17,795 basehttp 381630 124340552066752 code 400, message Bad HTTP/0.9 request type ('\x16\x03\x01\x00u\x01\x00\x00q\x03\x03éP\x02s\x86\x13TÓ`\x94¼Ö]4#\x8aMÒl½4Q\x8dù\x89\x95\x8b/rt/\x9f\x00\x00\x1aÀ/À+À\x11À\x07À\x13À')
+ERROR 2025-06-21 06:01:17,795 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 06:01:18,117 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x14À')
+ERROR 2025-06-21 06:01:18,117 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 06:01:18,460 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x14À')
+ERROR 2025-06-21 06:01:18,460 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 06:01:18,780 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x14À')
+ERROR 2025-06-21 06:01:18,780 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 06:14:32,482 basehttp 381630 124340552066752 - Broken pipe from ('167.94.145.106', 59918)
+INFO 2025-06-21 06:14:35,932 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+INFO 2025-06-21 06:14:42,208 basehttp 381630 124340552066752 - Broken pipe from ('167.94.145.106', 39362)
+INFO 2025-06-21 06:14:45,242 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+WARNING 2025-06-21 06:14:45,490 log 381630 124340552066752 Not Found: /favicon.ico
+WARNING 2025-06-21 06:14:45,490 basehttp 381630 124340552066752 "GET /favicon.ico HTTP/1.1" 404 2712
+INFO 2025-06-21 06:14:45,611 basehttp 381630 124340552066752 code 505, message Invalid HTTP version (2.0)
+ERROR 2025-06-21 06:14:45,611 basehttp 381630 124340552066752 "PRI * HTTP/2.0" 505 -
+WARNING 2025-06-21 06:14:49,574 log 381630 124340552066752 Not Found: /favicon.ico
+WARNING 2025-06-21 06:14:49,575 basehttp 381630 124340552066752 "GET /favicon.ico HTTP/1.1" 404 2712
+INFO 2025-06-21 06:14:49,640 basehttp 381630 124340552066752 code 505, message Invalid HTTP version (2.0)
+ERROR 2025-06-21 06:14:49,640 basehttp 381630 124340552066752 "PRI * HTTP/2.0" 505 -
+INFO 2025-06-21 06:14:52,776 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x14À')
+ERROR 2025-06-21 06:14:52,776 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+WARNING 2025-06-21 06:14:53,011 log 381630 124340552066752 Not Found: /sitemap.xml
+WARNING 2025-06-21 06:14:53,018 basehttp 381630 124340552066752 "GET /sitemap.xml HTTP/1.1" 404 2712
+INFO 2025-06-21 06:28:47,833 basehttp 381630 124340552066752 code 400, message Bad request syntax ('JDWP-Handshake')
+WARNING 2025-06-21 06:28:47,840 basehttp 381630 124340552066752 "JDWP-Handshake" 400 -
+INFO 2025-06-21 06:44:10,063 basehttp 381630 124340552066752 code 400, message Bad request syntax ('JDWP-Handshake')
+WARNING 2025-06-21 06:44:10,063 basehttp 381630 124340552066752 "JDWP-Handshake" 400 -
+INFO 2025-06-21 10:41:17,779 basehttp 381630 124340552066752 code 400, message Bad request syntax ('\x16\x03\x01\x01')
+ERROR 2025-06-21 10:41:17,782 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 10:41:17,984 basehttp 381630 124340552066752 code 400, message Bad request syntax ('\x16\x03\x01\x01')
+ERROR 2025-06-21 10:41:17,984 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 12:29:52,628 basehttp 381630 124340552066752 "GET / HTTP/1.1" 200 37
+INFO 2025-06-21 13:36:51,841 basehttp 381630 124340552066752 code 400, message Bad request version ('À\x13À')
+ERROR 2025-06-21 13:36:51,844 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 13:36:52,063 basehttp 381630 124340552066752 code 400, message Bad request version ('»¡v\x8e')
+ERROR 2025-06-21 13:36:52,064 basehttp 381630 124340552066752 You're accessing the development server over HTTPS, but it only supports HTTP.
+INFO 2025-06-21 13:38:22,012 autoreload 381630 124340672548992 /root/wpp-og/whatsapp_backend/authentication/models.py changed, reloading.
+INFO 2025-06-21 13:38:34,672 autoreload 449651 135286500049024 Watching for file changes with StatReloader
+INFO 2025-06-21 13:41:10,305 autoreload 450451 137868271784064 Watching for file changes with StatReloader
+INFO 2025-06-21 14:20:06,200 basehttp 449651 135286389470912 code 400, message Bad request syntax ('JDWP-Handshake')
+WARNING 2025-06-21 14:20:06,204 basehttp 449651 135286389470912 "JDWP-Handshake" 400 -
+INFO 2025-06-21 14:42:50,200 autoreload 455170 125728971108480 Watching for file changes with StatReloader

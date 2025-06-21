@@ -16,6 +16,11 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/auth/login/`, credentials);
   }
 
+  // Clientes
+  getClients(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/clients/`);
+  }
+
   // Atendimentos
   getAtendimentos(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/atendimentos/`);

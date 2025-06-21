@@ -1,0 +1,280 @@
+/* Reset e base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Container principal */
+.app-container {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-container.no-header {
+  background: white;
+}
+
+/* Header superior */
+.app-header {
+  background: linear-gradient(135deg, #6b46c1 0%, #8b5cf6 100%);
+  box-shadow: 0 4px 20px rgba(107, 70, 193, 0.15);
+  position: relative;
+  z-index: 1000;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 70px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Brand/Logo */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.brand-icon {
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.brand-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Navegação por tabs */
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 0.95rem;
+  position: relative;
+}
+
+.nav-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.nav-tab.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 20px;
+  right: 20px;
+  height: 3px;
+  background: white;
+  border-radius: 2px;
+}
+
+.nav-tab mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* Ações do usuário */
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn {
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.3s ease;
+  width: 44px;
+  height: 44px;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: scale(1.05);
+}
+
+.action-btn mat-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+/* Conteúdo principal */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.main-content.full-height {
+  min-height: 100vh;
+  background: white;
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+  .header-content {
+    padding: 0 16px;
+  }
+  
+  .brand-title {
+    font-size: 1.3rem;
+  }
+  
+  .nav-tabs {
+    gap: 4px;
+  }
+  
+  .nav-tab {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    height: 60px;
+    padding: 0 12px;
+    flex-wrap: wrap;
+  }
+  
+  .brand {
+    order: 1;
+    flex: 1;
+  }
+  
+  .user-actions {
+    order: 2;
+  }
+  
+  .nav-tabs {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 8px -12px -8px -12px;
+    padding: 8px 12px;
+    gap: 2px;
+  }
+  
+  .nav-tab {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .nav-tab span {
+    display: none;
+  }
+  
+  .brand-title {
+    font-size: 1.1rem;
+  }
+  
+  .action-btn {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .action-btn mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-content {
+    height: auto;
+    min-height: 60px;
+    padding: 8px;
+  }
+  
+  .brand {
+    gap: 8px;
+  }
+  
+  .brand-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .brand-title {
+    font-size: 1rem;
+  }
+  
+  .nav-tabs {
+    margin: 8px -8px -8px -8px;
+    padding: 6px 8px;
+  }
+  
+  .nav-tab {
+    padding: 6px 8px;
+  }
+  
+  .user-actions {
+    gap: 4px;
+  }
+}
+
+/* Animações */
+@keyframes slideInDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.app-header {
+  animation: slideInDown 0.4s ease-out;
+}
+
+.nav-tab {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+

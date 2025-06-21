@@ -5,10 +5,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from .models import User
-from .serializers import UserSerializer, LoginSerializer, RegisterSerializer
+from .models import User, Client
+from .serializers import UserSerializer, LoginSerializer, RegisterSerializer, ClientSerializer
 
 # Create your views here.
+
+class ClientViewSet(viewsets.ModelViewSet):
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+    permission_classes = [IsAuthenticated]
 
 class AuthViewSet(viewsets.GenericViewSet):
     permission_classes = [AllowAny]
@@ -19,7 +24,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             user = authenticate(
-                username=serializer.validated_data['username'],
+                username=serializer.validated_data['email'],
                 password=serializer.validated_data['password']
             )
             if user:

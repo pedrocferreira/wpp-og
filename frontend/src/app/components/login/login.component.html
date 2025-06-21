@@ -1,0 +1,25 @@
+<div class="login-container">
+  <div class="login-box">
+    <div class="login-header">
+      <h2>Bem-vindo de volta!</h2>
+      <p>Acesse seu painel de atendimento.</p>
+    </div>
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="input-group">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" formControlName="email" placeholder="seu@email.com">
+      </div>
+      <div class="input-group">
+        <label for="password">Senha</label>
+        <input id="password" type="password" formControlName="password" placeholder="Sua senha">
+      </div>
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+      <button type="submit" class="login-button" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Entrar</span>
+        <span *ngIf="isLoading">Entrando...</span>
+      </button>
+    </form>
+  </div>
+</div>

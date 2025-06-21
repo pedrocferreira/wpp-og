@@ -18,11 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenRefreshView
-from authentication.views import AuthViewSet
+from authentication.views import AuthViewSet, ClientViewSet
 from .views import home_view
 
 router = routers.DefaultRouter()
 router.register('auth', AuthViewSet, basename='auth')
+router.register('clients', ClientViewSet, basename='clients')
 
 urlpatterns = [
     path('', home_view, name='home'),
