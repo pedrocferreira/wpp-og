@@ -74,8 +74,8 @@ SEMPRE confirme antes de finalizar um agendamento completo."""
                 if hasattr(client, 'whatsapp'):
                     client_whatsapp = client.whatsapp
             
-            # A URL do frontend pode vir de settings no futuro para ser mais flexível
-            booking_link = f"http://155.133.22.207:4200/agendamento?whatsapp={client_whatsapp}"
+            # URL final após redirecionamentos do Traefik  
+            booking_link = f"http://155.133.22.207:9000/agendamento?whatsapp={client_whatsapp}"
             
             return f"""📅 *Agendamento de Consultas*
 
@@ -186,8 +186,8 @@ Após agendar, você receberá uma confirmação aqui mesmo! 😊"""
                 if hasattr(client, 'whatsapp'):
                     client_whatsapp = client.whatsapp
             
-            # Criar link de agendamento
-            booking_link = f"http://155.133.22.207:4200/agendamento?whatsapp={client_whatsapp}"
+            # URL final após redirecionamentos do Traefik
+            booking_link = f"http://155.133.22.207:9000/agendamento?whatsapp={client_whatsapp}"
             
             return f"""📅 *Agendamento de Consultas*
 

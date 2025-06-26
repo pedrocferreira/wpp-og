@@ -33,6 +33,7 @@ class Appointment(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='whatsapp')
     description = models.TextField(blank=True)
+    google_calendar_event_id = models.CharField(max_length=255, blank=True, null=True)  # ID do evento no Google Calendar
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

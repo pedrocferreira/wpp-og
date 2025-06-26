@@ -53,4 +53,13 @@ export class ApiService {
   createAppointment(appointmentData: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/appointments/book/`, appointmentData);
   }
+
+  // Métodos genéricos para Google Calendar e configurações
+  get(endpoint: string): Promise<any> {
+    return this.http.get(`${this.apiUrl}${endpoint}`).toPromise();
+  }
+
+  post(endpoint: string, data: any): Promise<any> {
+    return this.http.post(`${this.apiUrl}${endpoint}`, data).toPromise();
+  }
 } 

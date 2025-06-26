@@ -12,7 +12,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from .evolution_service import EvolutionService
-from .ai_service import AIService, IntentProcessor
+# from .ai_service import AIService, IntentProcessor  # Comentado - usando SmartAIService
 import json
 
 logger = logging.getLogger(__name__)
@@ -51,19 +51,21 @@ class WebhookView(APIView):
                     is_from_bot=False
                 )
                 
-                # Processa com IA
-                ai_service = AIService()
-                conversation_history = Message.objects.filter(
-                    conversation=conversation
-                ).order_by('-created_at')[:5]
+                # Processa com IA - DESABILITADO (usando EvolutionService com SmartAI)
+                # ai_service = AIService()
+                # conversation_history = Message.objects.filter(
+                #     conversation=conversation
+                # ).order_by('-created_at')[:5]
                 
-                response = ai_service.process_message(
-                    message_data.get('body'),
-                    context={'conversation_history': conversation_history}
-                )
+                # response = ai_service.process_message(
+                #     message_data.get('body'),
+                #     context={'conversation_history': conversation_history}
+                # )
+                response = "Usando EvolutionService com SmartAI"
                 
-                # Identifica a intenção
-                intent = IntentProcessor.identify_intent(message_data.get('body'))
+                # Identifica a intenção - DESABILITADO
+                # intent = IntentProcessor.identify_intent(message_data.get('body'))
+                intent = "none"
                 
                 # Se for agendamento, processa especialmente
                 if intent == 'agendamento':

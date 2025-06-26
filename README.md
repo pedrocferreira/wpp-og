@@ -313,3 +313,10 @@ Para suporte ou dúvidas:
 2. Consulte os logs do sistema
 3. Abra uma issue no repositório
 4. Entre em contato com a equipe de suporte 
+
+
+Email: admin@example.com
+Senha: admin123
+Opção 2 - Usuário Teste (novo):
+Email: teste@teste.com
+Senha: 123456

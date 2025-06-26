@@ -179,11 +179,7 @@ class EvolutionService:
                     
                     # Processa mensagem com SmartAI
                     logger.info("Processando mensagem com SmartAI: %s", content)
-                    resposta = self.ai_service.process_message(
-                        message_text=content, 
-                        client_whatsapp=phone, 
-                        client_name=push_name or appointment_client.name
-                    )
+                    resposta = self.ai_service.process_message(content, context)
                     
                     # Envia resposta e salva no banco
                     if resposta:

@@ -1,0 +1,44 @@
+# Nginx Dockerfile para produção
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app
+
+# Copiar arquivos de dependências do frontend
+COPY frontend/package*.json ./
+
+# Instalar dependências
+RUN npm ci --only=production --silent
+
+# Copiar código fonte do frontend
+COPY frontend/ .
+
+# Build da aplicação Angular
+RUN npm run build --prod
+
+# Estágio final - Nginx
+FROM nginx:alpine
+
+# Instalar netcat para health checks
+RUN apk add --no-cache netcat-openbsd
+
+# Remover configuração padrão
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copiar configuração personalizada
+COPY docker/nginx-prod.conf /etc/nginx/conf.d/
+
+# Copiar frontend buildado
+COPY --from=frontend-builder /app/dist/frontend /usr/share/nginx/html
+
+# Criar diretórios para SSL (opcional)
+RUN mkdir -p /etc/nginx/ssl
+
+# Expor portas
+EXPOSE 80 443
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD nc -z localhost 80 || exit 1
+
+# Comando para iniciar nginx
+CMD ["nginx", "-g", "daemon off;"] 

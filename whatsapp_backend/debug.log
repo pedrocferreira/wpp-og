@@ -5249,3 +5249,5 @@ INFO 2025-06-21 13:41:10,305 autoreload 450451 137868271784064 Watching for file
 INFO 2025-06-21 14:20:06,200 basehttp 449651 135286389470912 code 400, message Bad request syntax ('JDWP-Handshake')
 WARNING 2025-06-21 14:20:06,204 basehttp 449651 135286389470912 "JDWP-Handshake" 400 -
 INFO 2025-06-21 14:42:50,200 autoreload 455170 125728971108480 Watching for file changes with StatReloader
+INFO 2025-06-21 14:53:37,355 autoreload 455170 125728971108480 /root/wpp-og/whatsapp_backend/whatsapp_backend/settings.py changed, reloading.
+INFO 2025-06-21 14:53:38,236 autoreload 456062 123534493708416 Watching for file changes with StatReloader

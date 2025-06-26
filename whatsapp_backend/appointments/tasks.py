@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Appointment, AppointmentReminder
 from whatsapp.services import EvolutionAPIService
-from whatsapp.ai_service import AIService
+from whatsapp.smart_ai_service import SmartAIService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def send_appointment_reminders():
         now = timezone.now()
         reminders = AppointmentReminder.objects.filter(
             sent=False,
-            scheduled_time__lte=now
+            scheduled_for__lte=now
         )
         
         evolution_service = EvolutionAPIService()

@@ -31,15 +31,21 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-secret-key-here')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['155.133.22.207', 'localhost', '127.0.0.1']  # Configure apropriadamente em produção
+ALLOWED_HOSTS = ['og-trk.xyz', 'www.og-trk.xyz', '155.133.22.207', 'localhost', '127.0.0.1']  # Configure apropriadamente em produção
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True  # Em produção, configure apropriadamente
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",
-    "http://127.0.0.1:4200",
-    "http://155.133.22.207:4200",  # Adicione o IP do seu frontend aqui
+    "http://localhost:3000",
+    "http://127.0.0.1:3000", 
+    "http://og-trk.xyz",
+    "https://og-trk.xyz",
+    "http://www.og-trk.xyz",
+    "https://www.og-trk.xyz",
+    "http://155.133.22.207:3000",  # Mantido para compatibilidade
+    "http://155.133.22.207:9000",  # Frontend atual
+    "http://localhost:9000",       # Para desenvolvimento local
 ]
 
 # Application definition
@@ -104,8 +110,12 @@ WSGI_APPLICATION = 'whatsapp_backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'whatsapp_db'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres123'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -192,6 +202,10 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Celery Beat Configuration
+CELERY_BEAT_SCHEDULE_FILENAME = os.path.join(BASE_DIR, 'beat', 'celerybeat-schedule')
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 # WhatsApp Evolution API Configuration
 EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', 'https://evo.og-trk.xyz')
 EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '067CD1A2E662-483F-A776-C977DED90692')
@@ -224,26 +238,32 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'debug.log'),
-            'formatter': 'verbose',
-        },
     },
     'loggers': {
         '': {  # Root logger
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
         },
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
         'whatsapp': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
     },
 }
+
+# Google Calendar Configuration
+GOOGLE_OAUTH2_CLIENT_ID = os.getenv('GOOGLE_OAUTH2_CLIENT_ID')
+GOOGLE_OAUTH2_CLIENT_SECRET = os.getenv('GOOGLE_OAUTH2_CLIENT_SECRET')
+GOOGLE_OAUTH2_REDIRECT_URI = os.getenv('GOOGLE_OAUTH2_REDIRECT_URI', 'http://localhost:4200/google-callback')
+
+# Scopes necessários para Google Calendar
+GOOGLE_CALENDAR_SCOPES = [
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/calendar.events'
+]
