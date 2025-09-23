@@ -48,8 +48,10 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - EVOLUTION_API_URL=https://evo.og-trk.xyz
       - EVOLUTION_API_KEY=067CD1A2E662-483F-A776-C977DED90692
-      - EVOLUTION_INSTANCE_ID=pedro
+      - EVOLUTION_INSTANCE_ID=admin
       - OPENAI_API_KEY=${OPENAI_API_KEY:-your-openai-api-key-here}
+      - GEMINI_API_KEY=AIzaSyD67Krgy_1vNiXsFAWI_R3CMB17TGM03oc
+      - GEMINI_ENABLED=true
     volumes:
       - ./whatsapp_backend:/app
       - static_volume:/app/staticfiles
@@ -79,8 +81,10 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - EVOLUTION_API_URL=https://evo.og-trk.xyz
       - EVOLUTION_API_KEY=067CD1A2E662-483F-A776-C977DED90692
-      - EVOLUTION_INSTANCE_ID=pedro
+      - EVOLUTION_INSTANCE_ID=admin
       - OPENAI_API_KEY=${OPENAI_API_KEY:-your-openai-api-key-here}
+      - GEMINI_API_KEY=AIzaSyD67Krgy_1vNiXsFAWI_R3CMB17TGM03oc
+      - GEMINI_ENABLED=true
     volumes:
       - ./whatsapp_backend:/app
     depends_on:

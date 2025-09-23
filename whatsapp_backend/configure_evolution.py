@@ -24,8 +24,8 @@ def configure_evolution():
     
     # Criar nova configuração
     config = EvolutionConfig.objects.create(
-        instance_id="pedro",
-        api_key="067CD1A2E662-483F-A776-C977DED90692",
+        instance_id="Elo",
+        api_key="0891579bb8dda6a54deb403b0c01241c",
         webhook_url="http://og-trk.xyz/api/whatsapp/webhook/evolution/",
         is_active=True
     )

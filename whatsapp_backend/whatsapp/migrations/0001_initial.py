@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('status', models.CharField(default='sent', max_length=50)),
                 ('processed_by_ai', models.BooleanField(default=False)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='appointments.client')),
+                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='authentication.client')),
             ],
             options={
                 'ordering': ['-timestamp'],

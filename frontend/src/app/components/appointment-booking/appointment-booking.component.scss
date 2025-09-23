@@ -4,7 +4,7 @@
   align-items: flex-start;
   min-height: 100vh;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8B5CF6 0%, #A855F7 50%, #7C3AED 100%);
 }
 
 .booking-card {
@@ -59,7 +59,7 @@
   }
 
   &.mat-primary {
-    background-color: #3f51b5;
+    background-color: #8B5CF6;
     color: white;
   }
 }
@@ -210,7 +210,7 @@
       background-color: #6c757d;
       
       &.mat-step-icon-selected {
-        background-color: #3f51b5;
+        background-color: #8B5CF6;
       }
       
       &.mat-step-icon-state-done {

@@ -1,62 +1,131 @@
-# Frontend
+# Frontend - Sistema Inteligente
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.14.
+Este é o frontend do Sistema Inteligente de Gestão & Atendimento, desenvolvido com Angular 17+ e Angular Material.
 
-## Development server
+## 🎨 Design Moderno
 
-To start a local development server, run:
+O frontend foi modernizado com:
+
+### ✨ Características Visuais
+- **Logo personalizado**: Uso do `logo.png` em todos os componentes
+- **Tema roxo moderno**: Paleta de cores unificada com tons de roxo (#8B5CF6, #A855F7, #7C3AED)
+- **Efeitos glassmorphism**: Backdrop blur e transparências
+- **Animações suaves**: Transições e hover effects modernos
+- **Design responsivo**: Otimizado para desktop, tablet e mobile
+
+### 🎯 Componentes Principais
+
+#### Navbar
+- Logo centralizado com efeitos hover
+- Gradiente roxo moderno
+- Menu de usuário com informações detalhadas
+- Responsivo com animações suaves
+
+#### Tela de Login
+- Design glassmorphism com blur
+- Logo animado com hover effects
+- Campos de input modernizados
+- Botões com gradientes e sombras
+- Background animado com partículas
+
+#### Cards e Elementos
+- Bordas arredondadas consistentes
+- Sombras suaves com tons de roxo
+- Hover effects em todos os componentes interativos
+- Scrollbar personalizada
+
+### 🌈 Paleta de Cores
+
+```scss
+:root {
+  --primary-purple: #8B5CF6;
+  --primary-purple-light: #A855F7;
+  --primary-purple-dark: #7C3AED;
+  --secondary-purple: #DDD6FE;
+  --purple-50: #FAF5FF;
+  --purple-100: #F3E8FF;
+  --purple-200: #E9D5FF;
+  --white: #ffffff;
+}
+```
+
+### 📱 Responsividade
+
+O design se adapta automaticamente a diferentes tamanhos de tela:
+- **Desktop**: Layout completo com todos os elementos
+- **Tablet**: Elementos condensados mantendo funcionalidade
+- **Mobile**: Interface otimizada para touch com textos maiores
+
+## 🚀 Tecnologias
+
+- **Angular 17+**: Framework principal
+- **Angular Material**: Componentes de UI
+- **SCSS**: Estilização avançada
+- **TypeScript**: Linguagem de programação
+- **Responsive Design**: Design adaptativo
+
+## 📦 Estrutura
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── components/
+│   │   │   ├── navbar/           # Barra de navegação
+│   │   │   ├── login/            # Tela de login
+│   │   │   ├── dashboard/        # Dashboard principal
+│   │   │   └── ...
+│   │   └── services/             # Serviços da aplicação
+│   ├── assets/
+│   │   ├── logo.png             # Logo principal
+│   │   └── ...
+│   └── styles.scss              # Estilos globais
+```
+
+## 🛠 Desenvolvimento
 
 ```bash
+# Instalar dependências
+npm install
+
+# Executar em desenvolvimento
 ng serve
+
+# Build para produção
+ng build --prod
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## 🎨 Customização
 
-## Code scaffolding
+Para personalizar o tema, edite as variáveis CSS em `src/styles.scss`:
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```scss
+:root {
+  --primary-purple: #SUA_COR;
+  --primary-purple-light: #SUA_COR_CLARA;
+  --primary-purple-dark: #SUA_COR_ESCURA;
+}
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## 📋 Features
 
-```bash
-ng generate --help
-```
+- ✅ Design moderno e responsivo
+- ✅ Tema roxo unificado
+- ✅ Logo personalizado
+- ✅ Animações suaves
+- ✅ Efeitos glassmorphism
+- ✅ Componentes Material customizados
+- ✅ Scrollbar personalizada
+- ✅ Dark mode ready
 
-## Building
+## 🔧 Configurações
 
-To build the project run:
+O projeto está configurado com:
+- Angular Material com tema customizado
+- SCSS para estilização avançada
+- Variáveis CSS para fácil manutenção
+- Classes utilitárias para desenvolvimento rápido
 
-```bash
-ng build
-```
+---
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
-
-
-npx ng serve --host 0.0.0.0 --port 4200
+**Desenvolvido com ❤️ e muito ☕**

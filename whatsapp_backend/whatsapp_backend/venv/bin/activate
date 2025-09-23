@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/home/pedro/wpp-og/whatsapp_backend/whatsapp_backend/venv
+VIRTUAL_ENV=/home/Elo/wpp-og/whatsapp_backend/whatsapp_backend/venv
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

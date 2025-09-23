@@ -103,10 +103,10 @@ Quer que eu agende pra você?"
 ### **Contexto Conversacional:**
 ```
 Cliente: "Oi" (primeira mensagem)
-IA: "Oi, Pedro! Tudo bom? Eu sou a Elô..."
+IA: "Oi, Elo! Tudo bom? Eu sou a Elô..."
 
 Cliente: "Oi" (depois de ter agendamento)
-IA: "Oi, Pedro! Tudo bom? Vi que você já tem uma consulta marcada para 25/06 às 16:00! 😊
+IA: "Oi, Elo! Tudo bom? Vi que você já tem uma consulta marcada para 25/06 às 16:00! 😊
 
 Como posso te ajudar hoje?"
 ```

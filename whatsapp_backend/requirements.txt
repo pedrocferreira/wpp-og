@@ -24,6 +24,7 @@ google-auth==2.25.2
 dateparser==1.2.0
 spacy==3.7.2
 
-# OpenAI para IA mais avançada
+# AI Libraries
 openai>=1.0.0
-httpx>=0.25.0,<0.28.0  # Versão compatível com OpenAI 
+httpx>=0.25.0,<0.28.0  # Versão compatível com OpenAI
+google-generativeai>=0.3.0  # Google Gemini API 

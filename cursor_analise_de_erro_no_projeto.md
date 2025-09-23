@@ -35,7 +35,7 @@ Com o `vuetify-nuxt-module`, os componentes do Vuetify como `VAlert` deveriam se
 1.  Em algum lugar do seu projeto (talvez não neste arquivo, ou em uma versão anterior que ainda está em cache), existe uma tentativa de importar `VAlert` usando o caminho `vuetify/lib/components/VAlert`. Este caminho é geralmente para uso interno do Vuetify ou para cenários sem otimização de tree-shaking, e não é o recomendado com `vuetify-nuxt-module`.
 2.  O processo de auto-importação do `vuetify-nuxt-module` pode não estar funcionando corretamente, ou o cache do Vite está desatualizado.
 
-O outro erro que você mencionou, `ERROR Failed to resolve entry for package "/home/pedro/whatsapp-atendimento/node_modules/.cache/vite/client/deps"`, reforça a ideia de que pode haver um problema com o cache do Vite ou com as dependências.
+O outro erro que você mencionou, `ERROR Failed to resolve entry for package "/home/Elo/whatsapp-atendimento/node_modules/.cache/vite/client/deps"`, reforça a ideia de que pode haver um problema com o cache do Vite ou com as dependências.
 
 **Minhas sugestões são:**
 
@@ -95,7 +95,7 @@ esta assim
 
 Puxa, que chato que o erro persiste! Parece que a limpeza anterior não foi suficiente para eliminar completamente o cache problemático do Vite.
 
-O erro `Failed to resolve entry for package "/home/pedro/whatsapp-atendimento/node_modules/.cache/vite/client/deps"` é uma forte indicação de que o cache do Vite ainda está causando problemas.
+O erro `Failed to resolve entry for package "/home/Elo/whatsapp-atendimento/node_modules/.cache/vite/client/deps"` é uma forte indicação de que o cache do Vite ainda está causando problemas.
 
 Vamos tentar uma limpeza mais completa:
 
@@ -133,7 +133,7 @@ Entendo, a aplicação está presa na tela de carregamento do Nuxt e os mesmos e
 
 Os erros:
 1.  `ERROR Failed to resolve import "vuetify/lib/components/VAlert" from "components/WhatsAppPanel.vue". Does the file exist?`
-2.  `ERROR Failed to resolve entry for package "/home/pedro/whatsapp-atendimento/node_modules/.cache/vite/client/deps". The package may have incorrect main/module/exports specified in its package.json.`
+2.  `ERROR Failed to resolve entry for package "/home/Elo/whatsapp-atendimento/node_modules/.cache/vite/client/deps". The package may have incorrect main/module/exports specified in its package.json.`
 
 Especialmente o segundo erro, referente ao cache do Vite (`node_modules/.cache/vite/client/deps`), mesmo após as limpezas, é preocupante. O primeiro erro, sobre a importação do `VAlert`, indica que o Vite está tentando resolver o componente `VAlert` usado em `components/WhatsAppPanel.vue` através de um caminho (`vuetify/lib/components/VAlert`) que não é o padrão quando se usa `vuetify-nuxt-module` (que geralmente auto-importa os componentes ou os disponibiliza via `vuetify/components`).
 
@@ -438,7 +438,7 @@ Depois de executar `yarn install` e `yarn dev`, verifique se os erros desaparece
 
 Vejo que o erro do `VAlert` desapareceu, o que é um progresso! No entanto, ainda temos o erro do cache do Vite:
 
-`ERROR Failed to resolve entry for package "/home/pedro/whatsapp-atendimento/node_modules/.cache/vite/client/deps"`
+`ERROR Failed to resolve entry for package "/home/Elo/whatsapp-atendimento/node_modules/.cache/vite/client/deps"`
 
 Este erro persistente do Vite sugere que pode haver um problema mais profundo com o cache ou com a resolução de dependências. Vamos tentar uma abordagem mais agressiva:
 

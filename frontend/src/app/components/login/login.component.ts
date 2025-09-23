@@ -1,54 +1,85 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ApiService } from '../../services/api.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatIconModule,
+    MatProgressSpinnerModule
+  ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
-  loginForm: FormGroup;
-  errorMessage = '';
-  isLoading = false;
+export class LoginComponent implements OnInit {
+  isSignUp: boolean = false;
+  
+  // Form fields
+  name: string = '';
+  email: string = '';
+  password: string = '';
+  
+  hidePassword: boolean = true;
+  isLoading: boolean = false;
 
   constructor(
-    private fb: FormBuilder,
-    private apiService: ApiService,
-    private router: Router
-  ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
-    });
+    private authService: AuthService,
+    private router: Router,
+    private toastService: ToastService
+  ) {}
+
+  ngOnInit(): void {
+    // Verificar se já está logado
+    if (this.authService.isAuthenticated) {
+      this.router.navigate(['/dashboard']);
+    }
   }
 
-  onSubmit(): void {
-    if (this.loginForm.invalid) {
-      this.errorMessage = 'Por favor, preencha seu e-mail e senha.';
+  onLogin(): void {
+    if (!this.email || !this.password) {
+      this.toastService.warning('Por favor, preencha e-mail e senha.');
       return;
     }
-
     this.isLoading = true;
-    this.errorMessage = '';
-
-    this.apiService.login(this.loginForm.value).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        // Armazena o token de acesso de forma segura
-        localStorage.setItem('accessToken', response.token);
-        localStorage.setItem('refreshToken', response.refresh);
+    this.authService.login({ email: this.email, password: this.password }).subscribe({
+      next: () => {
+        this.toastService.success('Login realizado com sucesso!');
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = 'Credenciais inválidas. Por favor, tente novamente.';
-        console.error('Erro no login:', err);
+        this.toastService.error(err?.error?.detail || 'Credenciais inválidas.');
       }
     });
+  }
+
+  onSignUp(): void {
+    if (!this.name || !this.email || !this.password) {
+      this.toastService.warning('Por favor, preencha todos os campos para criar a conta.');
+      return;
+    }
+    this.isLoading = true;
+    this.authService.register({ name: this.name, email: this.email, password: this.password }).subscribe({
+      next: () => {
+        this.toastService.success('Conta criada com sucesso! Bem-vindo(a)!');
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.toastService.error(err?.error?.detail || 'Não foi possível criar a conta.');
+      }
+    });
+  }
+
+  togglePasswordVisibility(): void {
+    this.hidePassword = !this.hidePassword;
   }
 }

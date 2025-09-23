@@ -29,7 +29,7 @@ end
 # unset irrelevant variables
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV /home/pedro/wpp-og/whatsapp_backend/whatsapp_backend/venv
+set -gx VIRTUAL_ENV /home/Elo/wpp-og/whatsapp_backend/whatsapp_backend/venv
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/"bin $PATH

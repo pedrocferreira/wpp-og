@@ -1,4 +1,568 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { 
+  height: 100%; 
+  scroll-behavior: smooth;
+}
+
+body { 
+  margin: 0; 
+  font-family: 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
+  background: linear-gradient(135deg, #fafafa 0%, #f8fafc 100%);
+  color: #1a202c;
+  line-height: 1.6;
+  overflow-x: hidden; /* Previne scroll horizontal */
+}
+
+/* Variáveis CSS para tema */
+:root {
+  --primary-purple: #8B5CF6;
+  --primary-purple-light: #A855F7;
+  --primary-purple-dark: #7C3AED;
+  --secondary-purple: #DDD6FE;
+  --purple-50: #FAF5FF;
+  --purple-100: #F3E8FF;
+  --purple-200: #E9D5FF;
+  --white: #ffffff;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --shadow-primary: 0 4px 32px rgba(139, 92, 246, 0.15);
+  --shadow-secondary: 0 2px 16px rgba(139, 92, 246, 0.1);
+  --shadow-subtle: 0 1px 4px rgba(0, 0, 0, 0.05);
+  --border-radius: 12px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ===============================================
+   🎨 LOADING STATES E SKELETONS
+=============================================== */
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.8s infinite;
+  border-radius: var(--border-radius);
+}
+
+.skeleton-text {
+  height: 16px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 60%;
+  margin-bottom: 16px;
+  border-radius: 6px;
+}
+
+.skeleton-card {
+  height: 120px;
+  border-radius: var(--border-radius);
+  margin-bottom: 16px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Loading Spinner Moderno */
+.loading-spinner {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 3px solid var(--purple-200);
+  border-top: 3px solid var(--primary-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===============================================
+   🎯 MICRO-ANIMAÇÕES E INTERAÇÕES
+=============================================== */
+
+.hover-lift {
+  transition: var(--transition);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-primary);
+}
+
+.hover-scale {
+  transition: var(--transition);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-glow {
+  transition: var(--transition);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.pulse-on-hover {
+  transition: var(--transition);
+}
+
+.pulse-on-hover:hover {
+  animation: gentle-pulse 1s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Botões com ripple effect */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.ripple:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* ===============================================
+   🎨 ESTILOS PARA ANGULAR MATERIAL MELHORADOS
+=============================================== */
+
+.mat-mdc-button {
+  border-radius: var(--border-radius) !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+  letter-spacing: 0.2px !important;
+  transition: var(--transition) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.mat-mdc-raised-button.mat-primary {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-purple-light) 100%) !important;
+  box-shadow: var(--shadow-secondary) !important;
+  border: none !important;
+}
+
+.mat-mdc-raised-button.mat-primary:hover {
+  box-shadow: var(--shadow-primary) !important;
+  transform: translateY(-2px) !important;
+}
+
+.mat-mdc-raised-button.mat-primary:active {
+  transform: translateY(0) !important;
+  box-shadow: var(--shadow-secondary) !important;
+}
+
+.mat-mdc-outlined-button.mat-primary {
+  border-color: var(--primary-purple) !important;
+  color: var(--primary-purple) !important;
+  background: rgba(139, 92, 246, 0.02) !important;
+  transition: var(--transition) !important;
+}
+
+.mat-mdc-outlined-button.mat-primary:hover {
+  background: rgba(139, 92, 246, 0.08) !important;
+  border-color: var(--primary-purple-light) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Cards modernos com melhores animações */
+.mat-mdc-card {
+  border-radius: var(--border-radius-lg) !important;
+  box-shadow: var(--shadow-subtle), 0 4px 16px rgba(139, 92, 246, 0.08) !important;
+  border: 1px solid rgba(139, 92, 246, 0.1) !important;
+  transition: var(--transition) !important;
+  background: white !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.mat-mdc-card:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15) !important;
+}
+
+.mat-mdc-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.8s;
+}
+
+.mat-mdc-card:hover::before {
+  left: 100%;
+}
+
+/* Inputs modernos com melhores estados */
+.mat-mdc-text-field-wrapper {
+  border-radius: var(--border-radius) !important;
+  transition: var(--transition) !important;
+}
+
+.mat-mdc-form-field-focus-overlay {
+  background: rgba(139, 92, 246, 0.04) !important;
+}
+
+.mat-mdc-text-field-wrapper:not(.mdc-text-field--disabled) .mdc-text-field__input {
+  color: var(--gray-700) !important;
+}
+
+.mat-mdc-form-field:not(.mat-form-field-disabled) .mat-mdc-text-field-wrapper:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-subtle);
+}
+
+/* ===============================================
+   🎯 TOASTS E NOTIFICAÇÕES
+=============================================== */
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  max-width: 400px;
+  padding: 16px 20px;
+  border-radius: var(--border-radius);
+  color: white;
+  font-weight: 500;
+  box-shadow: var(--shadow-primary);
+  backdrop-filter: blur(16px);
+  animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.toast.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-purple-light) 100%);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ===============================================
+   🚀 ANIMAÇÕES DE PÁGINA E TRANSIÇÕES
+=============================================== */
+
+.page-enter {
+  animation: pageEnter 0.6s ease-out;
+}
+
+.page-exit {
+  animation: pageExit 0.3s ease-in;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+/* Stagger animations para listas */
+.stagger-item {
+  animation: staggerFadeIn 0.6s ease-out both;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===============================================
+   📱 MELHORIAS MOBILE E TOUCH
+=============================================== */
+
+/* Área de toque maior para mobile */
+@media (max-width: 768px) {
+  .mat-mdc-button {
+    min-height: 48px !important;
+    padding: 12px 24px !important;
+  }
+  
+  .mat-mdc-icon-button {
+    width: 48px !important;
+    height: 48px !important;
+  }
+  
+  /* Remove hover effects em mobile */
+  .hover-lift:hover,
+  .hover-scale:hover,
+  .hover-glow:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Adiciona feedback tátil */
+  button:active,
+  .mat-mdc-button:active {
+    transform: scale(0.95) !important;
+  }
+}
+
+/* ===============================================
+   🎨 SCROLLBAR PERSONALIZADA MELHORADA
+=============================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-purple-light) 100%);
+  border-radius: 4px;
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-purple-dark) 0%, var(--primary-purple) 100%);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--gray-100);
+}
+
+/* ===============================================
+   🎯 ESTADOS VAZIOS E FEEDBACK
+=============================================== */
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--gray-500);
+}
+
+.empty-state-icon {
+  font-size: 64px !important;
+  width: 64px;
+  height: 64px;
+  color: var(--gray-300);
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.empty-state-description {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+
+/* ===============================================
+   🔧 UTILITÁRIOS E CLASSES DE APOIO
+=============================================== */
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.purple-gradient {
+  background: linear-gradient(135deg, var(--primary-purple) 0%, var(--primary-purple-light) 100%);
+}
+
+.purple-gradient-soft {
+  background: linear-gradient(135deg, var(--purple-50) 0%, var(--purple-100) 100%);
+}
+
+.text-purple { color: var(--primary-purple) !important; }
+.text-purple-light { color: var(--primary-purple-light) !important; }
+.bg-purple-soft { background: var(--purple-50) !important; }
+
+.fade-in-up { animation: fadeInUp 0.6s ease-out; }
+.fade-in-down { animation: fadeInDown 0.6s ease-out; }
+.slide-in-right { animation: slideInRight 0.6s ease-out; }
+
+/* Bouncy entrance */
+.bounce-in {
+  animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===============================================
+   🎨 FOCUS E ACESSIBILIDADE
+=============================================== */
+
+button:focus-visible,
+.mat-mdc-button:focus-visible {
+  outline: 3px solid var(--primary-purple) !important;
+  outline-offset: 2px !important;
+  border-radius: var(--border-radius) !important;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper {
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+}
+
+/* ===============================================
+   📱 RESPONSIVIDADE MELHORADA
+=============================================== */
+
+@media (max-width: 768px) {
+  :root {
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+  }
+  
+  .toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
+}
+
+/* ===============================================
+   🌗 DARK MODE PREPARATION
+=============================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gray-50: #1a202c;
+    --gray-100: #2d3748;
+    --gray-200: #4a5568;
+    --gray-300: #718096;
+    --gray-400: #a0aec0;
+    --gray-500: #cbd5e0;
+  }
+}

@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://og-trk.xyz/api'
+  apiUrl: 'http://155.133.22.207:8000/api'
 }; 

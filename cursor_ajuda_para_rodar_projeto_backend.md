@@ -623,7 +623,7 @@ Se aparecer outro erro ou precisar de mais algum ajuste, é só avisar!
 
 Porém, o novo erro é:
 ```
-Erro ao enviar mensagem: HTTPSConnectionPool(host='evolution.og-trk.xyz', port=443): Max retries exceeded with url: /message/sendText/pedro (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x79cda34e5280>: Failed to resolve 'evolution.og-trk.xyz' ([Errno -2] Name or service not known)"))
+Erro ao enviar mensagem: HTTPSConnectionPool(host='evolution.og-trk.xyz', port=443): Max retries exceeded with url: /message/sendText/Elo (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x79cda34e5280>: Failed to resolve 'evolution.og-trk.xyz' ([Errno -2] Name or service not known)"))
 ```
 
 ### O que isso significa?
@@ -670,7 +670,7 @@ O backend está tentando enviar uma mensagem para a API do Evolution, mas não c
 Se precisar de ajuda para localizar e ajustar a configuração, me avise!
 
 ```plaintext
-Erro ao enviar mensagem: HTTPSConnectionPool(host='evolution.og-trk.xyz', port=443): Max retries exceeded with url: /message/sendText/pedro (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x79cda34e5280>: Failed to resolve 'evolution.og-trk.xyz' ([Errno -2] Name or service not known)"))
+Erro ao enviar mensagem: HTTPSConnectionPool(host='evolution.og-trk.xyz', port=443): Max retries exceeded with url: /message/sendText/Elo (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x79cda34e5280>: Failed to resolve 'evolution.og-trk.xyz' ([Errno -2] Name or service not known)"))
 ```
 
 ```plaintext
@@ -688,7 +688,7 @@ Erro ao enviar mensagem: HTTPSConnectionPool(host='evolution.og-trk.xyz', port=4
 Agora o backend está processando o webhook, criando a mensagem e tentando responder, mas está recebendo o erro:
 
 ```
-401 Client Error: Unauthorized for url: https://evo.og-trk.xyz/message/sendText/pedro
+401 Client Error: Unauthorized for url: https://evo.og-trk.xyz/message/sendText/Elo
 ```
 
 ### O que isso significa?
@@ -729,7 +729,7 @@ O erro 401 significa que a autenticação falhou ao tentar enviar a mensagem par
 Se quiser, posso te ajudar a localizar onde está a configuração da chave no seu projeto e como atualizar. Se precisar, envie o trecho do seu `.env` (omitindo dados sensíveis) ou me diga onde está a configuração!
 
 ```plaintext
-401 Client Error: Unauthorized for url: https://evo.og-trk.xyz/message/sendText/pedro
+401 Client Error: Unauthorized for url: https://evo.og-trk.xyz/message/sendText/Elo
 ```
 
 ```python
@@ -755,7 +755,7 @@ Encontrei as configurações da API Evolution no seu arquivo `settings.py`:
 # WhatsApp Evolution API Configuration
 EVOLUTION_API_URL = 'https://evo.og-trk.xyz'
 EVOLUTION_API_KEY = '067CD1A2E662-483F-A776-C977DED90692'
-EVOLUTION_INSTANCE_ID = 'pedro'
+EVOLUTION_INSTANCE_ID = 'Elo'
 ```
 
 ### O que fazer agora?
@@ -794,7 +794,7 @@ Se precisar de ajuda para ajustar o header ou gerar uma nova chave, me avise!
 # WhatsApp Evolution API Configuration
 EVOLUTION_API_URL = 'https://evo.og-trk.xyz'
 EVOLUTION_API_KEY = '067CD1A2E662-483F-A776-C977DED90692'
-EVOLUTION_INSTANCE_ID = 'pedro'
+EVOLUTION_INSTANCE_ID = 'Elo'
 ```
 
 ```python
@@ -836,7 +836,7 @@ Agora vamos reiniciar o servidor Django para aplicar as mudanças. O erro 401 de
 Se ainda persistir o erro 401, precisaremos:
 1. Verificar se a chave API está correta no Evolution Manager
 2. Confirmar se o formato do token está correto (algumas APIs esperam apenas o token, sem o prefixo "Bearer")
-3. Verificar se a instância "pedro" está ativa e conectada
+3. Verificar se a instância "Elo" está ativa e conectada
 
 Me avise se o erro persistir após reiniciar o servidor!
 
@@ -863,7 +863,7 @@ EVOLUTION_API_KEY = '067CD1A2E662-483F-A776-C977DED90692'
 
 Se você está conseguindo acessar o Evolution Manager com essa chave, mas ainda está recebendo erro 401, pode ser que:
 
-1. A instância "pedro" não esteja ativa
+1. A instância "Elo" não esteja ativa
 2. O formato do header de autenticação esteja incorreto
 
 Vamos tentar uma última alteração no código, usando apenas a chave sem o prefixo "Bearer":
@@ -890,7 +890,7 @@ EVOLUTION_API_KEY = '067CD1A2E662-483F-A776-C977DED90692'
 
 Agora, antes de reiniciar o servidor, verifique no Evolution Manager:
 
-1. Se a instância "pedro" está ativa e conectada
+1. Se a instância "Elo" está ativa e conectada
 2. Se o webhook está configurado corretamente com a URL:
    ```
    http://155.133.22.207:8000/api/whatsapp/webhook/evolution/
@@ -967,7 +967,7 @@ Vamos modificar o código para usar o token da instância:
 Agora, antes de reiniciar o servidor, precisamos verificar algumas coisas no Evolution Manager:
 
 1. Acesse o Evolution Manager
-2. Vá até a instância "pedro"
+2. Vá até a instância "Elo"
 3. Verifique se ela está conectada (status online)
 4. Copie o token da instância (não o token de API)
 5. Atualize o valor de `EVOLUTION_API_KEY` no seu `settings.py` com o token da instância
@@ -1052,7 +1052,7 @@ Agora o código vai:
 Reinicie o servidor Django e teste novamente. O erro 401 deve ser resolvido, pois agora estamos usando a mesma chave que está sendo usada pelo webhook.
 
 Se ainda houver problemas, me avise e podemos tentar outras abordagens, como:
-1. Verificar se a instância "pedro" está realmente online no Evolution Manager
+1. Verificar se a instância "Elo" está realmente online no Evolution Manager
 2. Tentar usar apenas o header `apikey` sem o `token`
 3. Verificar se há alguma configuração adicional necessária no Evolution Manager
 
@@ -1187,7 +1187,7 @@ Se ainda não funcionar, me envie os novos logs e poderemos identificar em qual 
 4. Envio da resposta
 
 Também seria útil verificar no Evolution Manager se:
-1. A instância "pedro" está online
+1. A instância "Elo" está online
 2. O webhook está configurado corretamente
 3. As permissões da API estão corretas
 
@@ -1473,7 +1473,7 @@ Reinicie o servidor Django e teste novamente. O sistema deve:
 6. Salvar a mensagem enviada
 
 Se ainda houver problemas, me envie os novos logs e poderemos identificar onde está falhando. Também seria útil verificar se:
-1. A instância "pedro" está online no Evolution Manager
+1. A instância "Elo" está online no Evolution Manager
 2. O webhook está configurado corretamente
 3. As permissões da API estão corretas
 
@@ -2788,7 +2788,7 @@ AI_ASSISTANT_NAME = os.getenv('AI_ASSISTANT_NAME', 'Elô')
 # WhatsApp Evolution API Configuration
 EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', 'https://evo.og-trk.xyz')
 EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '067CD1A2E662-483F-A776-C977DED90692')
-EVOLUTION_INSTANCE_ID = os.getenv('EVOLUTION_INSTANCE_ID', 'pedro')
+EVOLUTION_INSTANCE_ID = os.getenv('EVOLUTION_INSTANCE_ID', 'Elo')
 ```
 
 Agora vou instalar a biblioteca `python-dotenv` para carregar as variáveis do arquivo `.env`:
@@ -3742,7 +3742,7 @@ Me avise se deseja algum ajuste ou se quer avançar para integração com o fron
 Ótima análise! O erro que apareceu no log:
 
 ```
-ERROR evolution_service ... Erro ao processar webhook: Cannot query "Pedro Ferreira (555181281898)": Must be "Client" instance.
+ERROR evolution_service ... Erro ao processar webhook: Cannot query "Elo Ferreira (555181281898)": Must be "Client" instance.
 ```
 
 significa que, ao buscar ou criar o `ConversationState`, foi passado um valor que **não é uma instância do modelo `Client`**, mas sim provavelmente uma string ou outro objeto.
@@ -3783,7 +3783,7 @@ O valor de `client` **precisa ser uma instância do modelo `Client`** (do app `a
 Posso corrigir isso automaticamente para você agora. Deseja que eu faça a alteração?
 
 ```plaintext
-ERROR evolution_service ... Erro ao processar webhook: Cannot query "Pedro Ferreira (555181281898)": Must be "Client" instance.
+ERROR evolution_service ... Erro ao processar webhook: Cannot query "Elo Ferreira (555181281898)": Must be "Client" instance.
 ```
 
 ```python
@@ -3978,7 +3978,7 @@ Erro ao processar webhook: no such table: appointments_conversationstate
 Agora o erro é:
 
 ```
-Cannot assign "<Client: Pedro Ferreira>": "WhatsAppMessage.client" must be a "Client" instance.
+Cannot assign "<Client: Elo Ferreira>": "WhatsAppMessage.client" must be a "Client" instance.
 ```
 
 Esse erro ocorre porque o modelo `WhatsAppMessage` espera um cliente do app **authentication** (`authentication.models.Client`), mas estamos passando o cliente do app **appointments** (`appointments.models.Client`).  
@@ -4025,7 +4025,7 @@ Repita o mesmo para a mensagem enviada (resposta).
 Posso corrigir isso automaticamente para você! Deseja que eu faça a alteração?
 
 ```plaintext
-Cannot assign "<Client: Pedro Ferreira>": "WhatsAppMessage.client" must be a "Client" instance.
+Cannot assign "<Client: Elo Ferreira>": "WhatsAppMessage.client" must be a "Client" instance.
 ```
 
 ```python

@@ -23,11 +23,13 @@ class SmartAIService:
     
     def __init__(self):
         self.openai_client = None
+        self.gemini_model = None
+        self.ai_available = False
         self.calendar_service = GoogleCalendarService()
         self.natural_language_processor = NaturalLanguageProcessor()
         
-        # Inicializa OpenAI
-        self._initialize_openai()
+        # Inicializa AI (Gemini ou OpenAI)
+        self._initialize_ai()
         
         # Sistema de contexto conversacional compartilhado
         self.conversation_context = SmartAIService._shared_conversation_context
@@ -102,6 +104,12 @@ DETECÇÃO DE AGENDAMENTOS:
 - "quinta 14h" = agendamento
 - SEMPRE oferece para verificar disponibilidade
 
+LEMBRETES PERSONALIZADOS:
+- Se cliente pedir "me avisa 2 horas antes", "me avisa 1 semana antes", etc.
+- Confirme que vai configurar o lembrete personalizado
+- Explique que ele receberá a notificação no horário solicitado
+- Exemplos: "me avisa 2 horas antes", "lembra 1 dia antes", "avisa 30 minutos antes"
+
 FLUXO DE AGENDAMENTO:
 1. Cliente menciona dia/hora → "Deixa eu verificar..."
 2. Sistema verifica automaticamente
@@ -117,6 +125,9 @@ Você: "Claro! Que dia e horário você prefere?"
 Cliente: "Amanha as 18"
 Você: "Perfeito! Deixa eu verificar se amanhã às 18h tá livre..."
 
+Cliente: "me avisa 2 horas antes"
+Você: "Perfeito! Vou configurar um lembrete personalizado para te avisar 2 horas antes da consulta. Você receberá a notificação no horário certo! 😊"
+
 PRINCÍPIO FUNDAMENTAL: Seja CONTEXTUAL e HUMANA. Cada resposta deve considerar toda a conversa anterior e fluir naturalmente como se fosse uma pessoa real conversando."""
 
     def process_message(self, message_text, client_whatsapp, client_name=None):
@@ -131,129 +142,90 @@ PRINCÍPIO FUNDAMENTAL: Seja CONTEXTUAL e HUMANA. Cada resposta deve considerar 
             context = self.conversation_context.get(client_whatsapp, {})
             existing_appointments = context.get('current_appointments', [])
             
-            # PRIORIDADE 1: Verifica se é pedido de cancelamento/desmarcação
+            # PRIORIDADE 1: Verifica se é pedido de lembrete personalizado
+            reminder_response = self._handle_reminder_request(message_text, client_whatsapp, client_name)
+            if reminder_response:
+                return reminder_response
+            
+            # PRIORIDADE 2: Verifica se é pedido de cancelamento/desmarcação
             if self._is_cancellation_request(message_text):
                 return self._handle_cancellation_request(message_text, client_whatsapp, existing_appointments)
             
-            # PRIORIDADE 2: Verifica se é pergunta sobre consultas existentes
+            # PRIORIDADE 3: Verifica se é pergunta sobre consultas existentes
             if self._is_consultation_inquiry(message_text):
                 return self._handle_consultation_inquiry(message_text, client_whatsapp, existing_appointments)
             
-            # PRIORIDADE 3: Verifica se é pergunta sobre disponibilidade
+            # PRIORIDADE 4: Verifica se é pergunta sobre disponibilidade
             if self._is_availability_question(message_text):
                 return self._handle_availability_question(message_text, client_whatsapp)
             
-            # PRIORIDADE 4: Verifica se é agendamento específico
+            # PRIORIDADE 5: Verifica se é agendamento específico
             has_appointment_intent = self.natural_language_processor.extract_appointment_intent(message_text)
             extracted_datetime = None
             
             if has_appointment_intent:
                 extracted_datetime = self.natural_language_processor.extract_datetime(message_text)
                 if extracted_datetime:
-                    logger.info(f"Data/hora específica detectada: {extracted_datetime}")
                     return self._handle_specific_appointment(message_text, client_whatsapp, client_name, extracted_datetime)
             
-            # Se não é agendamento específico, usa GPT ou fallback
-            if self.openai_client and self.openai_available:
-                response = self._generate_gpt_response(message_text, client_whatsapp, client_name, has_appointment_intent)
-            else:
-                # Fallback para respostas programadas
-                response = self._generate_fallback_response(message_text, client_whatsapp, client_name, has_appointment_intent)
+            # PRIORIDADE 6: Usa IA (Gemini/OpenAI) para outras respostas
+            return self._generate_ai_response_with_context(message_text, client_whatsapp, client_name, has_appointment_intent)
             
-            # Adiciona resposta ao contexto para manter histórico
-            if response:
-                self._add_assistant_response_to_context(client_whatsapp, response)
-            
-            return response
-                
         except Exception as e:
             logger.error(f"Erro ao processar mensagem: {e}")
-            return "Oi! Tudo bem? Como posso te ajudar hoje? 😊"
-    
-    def _handle_specific_appointment(self, message_text, client_whatsapp, client_name, extracted_datetime):
-        """Processa agendamento com data/hora específicos - versão humanizada"""
+            return "Ops, deu uma complicação aqui... Pode repetir o que você disse?"
+
+    def _handle_reminder_request(self, message_text, client_whatsapp, client_name):
+        """
+        Processa pedidos de lembretes personalizados
+        """
         try:
-            # Valida horário de funcionamento
-            if not self._is_valid_business_hours(extracted_datetime):
-                return self._invalid_business_hours_response()
+            from appointments.reminder_service import ReminderService
             
-            # Primeira mensagem imediata - confirma que vai verificar
-            time_str = extracted_datetime.strftime('%H:%M')
-            if extracted_datetime.date() == datetime.now().date():
-                day_ref = "hoje"
-            elif extracted_datetime.date() == datetime.now().date() + timedelta(days=1):
-                day_ref = "amanhã"
-            else:
-                weekdays = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo']
-                weekday = weekdays[extracted_datetime.weekday()]
-                day_ref = f"na {weekday}"
+            reminder_service = ReminderService()
+            is_request, timing, timing_minutes, appointment = reminder_service.detect_reminder_request(message_text, client_whatsapp)
             
-            checking_message = f"Perfeito! Deixa eu verificar se {day_ref} às {time_str} está livre... ⏳"
-            
-            # Envia mensagem de verificação e programa resposta
-            self._send_checking_and_result(client_whatsapp, checking_message, extracted_datetime, client_name)
-            
-            # Retorna None para não enviar resposta imediata
-            return None
-                
-        except Exception as e:
-            logger.error(f"Erro ao processar agendamento específico: {e}")
-            return "Ai, desculpa! Deu uma complicação aqui... Pode repetir o dia e horário que você quer agendar?"
-    
-    def _send_checking_and_result(self, client_whatsapp, checking_message, extracted_datetime, client_name):
-        """Envia mensagem de verificação e depois o resultado com delay"""
-        def process_appointment():
-            try:
-                # Envia primeira mensagem imediatamente
-                from .evolution_service import EvolutionService
-                evolution_service = EvolutionService()
-                evolution_service.send_message(client_whatsapp, checking_message)
-                
-                # Aguarda alguns segundos para simular verificação
-                time.sleep(3)
-                
-                # Verifica disponibilidade
-                is_available = self._check_availability(extracted_datetime)
-                
-                if is_available:
-                    # Cria o agendamento
-                    appointment = self._create_appointment(
-                        client_whatsapp, 
-                        extracted_datetime, 
-                        client_name
+            if is_request:
+                if not appointment:
+                    return (
+                        f"Claro! Vou configurar um lembrete para te avisar {timing} da próxima consulta! 😊\n\n"
+                        f"Mas primeiro preciso que você agende uma consulta. Quer agendar agora?"
                     )
-                    
-                    if appointment:
-                        # Mensagem de confirmação humanizada
-                        confirmation = self._generate_humanized_confirmation(
-                            client_name or "Cliente", 
-                            extracted_datetime
-                        )
-                        evolution_service.send_message(client_whatsapp, confirmation)
-                    else:
-                        evolution_service.send_message(
-                            client_whatsapp, 
-                            "Ops, deu uma travada aqui no sistema... 😅\n\nPode me falar de novo o dia e horário? Já já consigo resolver!"
-                        )
-                else:
-                    # Sugere horários alternativos de forma humanizada
-                    alternative_slots = self._get_alternative_slots(extracted_datetime)
-                    alternatives = self._suggest_alternatives_human_v2(extracted_datetime, alternative_slots)
-                    evolution_service.send_message(client_whatsapp, alternatives)
-                    
-            except Exception as e:
-                logger.error(f"Erro no processamento delayed: {e}")
-                evolution_service.send_message(
-                    client_whatsapp, 
-                    "Ai, deu um probleminha aqui... 😅 Pode tentar de novo?"
+                
+                # Buscar ou criar cliente
+                client, created = Client.objects.get_or_create(
+                    whatsapp=client_whatsapp,
+                    defaults={'name': client_name or 'Cliente'}
                 )
-        
-        # Executa em thread separada
-        threading.Thread(target=process_appointment, daemon=True).start()
-    
-    def _generate_gpt_response(self, message_text, client_whatsapp, client_name, has_appointment_intent):
-        """Gera resposta usando GPT com contexto conversacional"""
+                
+                # Criar o lembrete personalizado
+                success, result = reminder_service.create_custom_reminder(
+                    client, appointment, timing, timing_minutes, message_text
+                )
+                
+                if success:
+                    appointment_date = appointment.date_time.strftime('%d/%m às %H:%M')
+                    return (
+                        f"Perfeito! ✅\n\n"
+                        f"Configurei um lembrete personalizado para te avisar {timing} da sua consulta.\n\n"
+                        f"Sua consulta está marcada para {appointment_date}.\n\n"
+                        f"Você receberá a notificação no horário certo! 😊"
+                    )
+                else:
+                    return f"Ops! {result}\n\nMas não se preocupe, você já receberá lembretes automáticos 1 dia antes e 2 horas antes da consulta! 😊"
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar pedido de lembrete: {e}")
+            return None
+
+    def _generate_ai_response_with_context(self, message_text, client_whatsapp, client_name, has_appointment_intent):
+        """Gera resposta usando IA (Gemini/OpenAI) com contexto conversacional"""
         try:
+            # Verifica se a IA está disponível
+            if not self.ai_available:
+                return self._generate_fallback_response(message_text, client_whatsapp, client_name, has_appointment_intent)
             # Busca contexto conversacional
             conversation_context = self._get_conversation_context_for_gpt(client_whatsapp)
             
@@ -317,20 +289,13 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
             # Mensagem atual
             messages.append({"role": "user", "content": message_text})
             
-            response = self.openai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                max_tokens=300,
-                temperature=0.7
-            )
-            
-            gpt_response = response.choices[0].message.content.strip()
-            logger.info(f"[GPT] Resposta gerada: {gpt_response[:100]}...")
+            ai_response = self._generate_ai_response(messages)
+            logger.info(f"[AI] Resposta gerada: {ai_response[:100]}...")
             
             # Salva a resposta no contexto para manter histórico real
-            self._add_assistant_response_to_context(client_whatsapp, gpt_response)
+            self._add_assistant_response_to_context(client_whatsapp, ai_response)
             
-            return gpt_response
+            return ai_response
             
         except Exception as e:
             logger.error(f"Erro ao gerar resposta GPT: {e}")
@@ -475,8 +440,8 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
                     try:
                         from django.contrib.auth import get_user_model
                         User = get_user_model()
-                        admin_user = User.objects.get(is_superuser=True)
-                        if self.calendar_service.load_credentials(admin_user):
+                        admin_user = User.objects.filter(is_superuser=True).first()
+                        if admin_user and self.calendar_service.load_credentials(admin_user):
                             google_cancelled = self.calendar_service.cancel_appointment(apt.google_calendar_event_id)
                             logger.info(f"Cancelamento Google Calendar: {'Sucesso' if google_cancelled else 'Erro'}")
                     except Exception as e:
@@ -500,7 +465,9 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
             # Múltiplas consultas - pede especificação
             response = "Você tem várias consultas marcadas:\n\n"
             for i, apt in enumerate(existing_appointments[:3], 1):
-                apt_date = apt.date_time.strftime('%d/%m/%Y às %H:%M')
+                # Converter para timezone local do Brasil para exibição correta
+                apt_local = apt.date_time.astimezone(self.timezone)
+                apt_date = apt_local.strftime('%d/%m/%Y às %H:%M')
                 response += f"{i}. {apt_date}\n"
             
             response += "\nQual você gostaria de cancelar? Me fala a data ou horário! 😊"
@@ -513,12 +480,14 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
         
         if len(existing_appointments) == 1:
             apt = existing_appointments[0]
-            apt_date = apt.date_time.strftime('%d/%m/%Y')
-            apt_time = apt.date_time.strftime('%H:%M')
+            # Converter para timezone local do Brasil para exibição correta
+            apt_local = apt.date_time.astimezone(self.timezone)
+            apt_date = apt_local.strftime('%d/%m/%Y')
+            apt_time = apt_local.strftime('%H:%M')
             
             # Calcula dias até a consulta
-            today = datetime.now().date()
-            apt_date_obj = apt.date_time.date()
+            today = datetime.now(self.timezone).date()
+            apt_date_obj = apt_local.date()
             days_diff = (apt_date_obj - today).days
             
             if days_diff == 0:
@@ -527,7 +496,7 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
                 day_ref = "amanhã"
             elif days_diff <= 7:
                 weekdays = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo']
-                weekday = weekdays[apt.date_time.weekday()]
+                weekday = weekdays[apt_local.weekday()]
                 day_ref = f"na {weekday}"
             else:
                 day_ref = f"no dia {apt_date}"
@@ -537,7 +506,9 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
         else:
             # Múltiplas consultas - mostra a próxima
             next_apt = existing_appointments[0]  # Já ordenado por data
-            apt_date = next_apt.date_time.strftime('%d/%m/%Y às %H:%M')
+            # Converter para timezone local do Brasil para exibição correta
+            next_apt_local = next_apt.date_time.astimezone(self.timezone)
+            apt_date = next_apt_local.strftime('%d/%m/%Y às %H:%M')
             
             response = f"Sua próxima consulta é em {apt_date}! 😊\n\n"
             
@@ -556,8 +527,8 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
             try:
                 from django.contrib.auth import get_user_model
                 User = get_user_model()
-                admin_user = User.objects.get(is_superuser=True)
-                if self.calendar_service.load_credentials(admin_user):
+                admin_user = User.objects.filter(is_superuser=True).first()
+                if admin_user and self.calendar_service.load_credentials(admin_user):
                     google_available = self.calendar_service.check_availability(
                         requested_datetime, 
                         end_datetime
@@ -596,9 +567,9 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
             from django.contrib.auth import get_user_model
             User = get_user_model()
             try:
-                admin_user = User.objects.get(is_superuser=True)
-                calendar_connected = self.calendar_service.load_credentials(admin_user)
-            except User.DoesNotExist:
+                admin_user = User.objects.filter(is_superuser=True).first()
+                calendar_connected = admin_user and self.calendar_service.load_credentials(admin_user)
+            except Exception:
                 calendar_connected = False
                 logger.warning("Usuário admin não encontrado para Google Calendar")
             
@@ -626,12 +597,52 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
                 description=f'Agendado via WhatsApp - {client_whatsapp}',
             )
             
+            # Cria lembretes automáticos
+            self._create_appointment_reminders(appointment)
+            
             logger.info(f"Agendamento criado: {appointment.id}")
             return appointment
             
         except Exception as e:
             logger.error(f"Erro ao criar agendamento: {e}")
             return None
+    
+    def _create_appointment_reminders(self, appointment):
+        """Cria lembretes automáticos para o agendamento"""
+        try:
+            from appointments.models import AppointmentReminder
+            
+            # Lembrete 1 dia antes
+            one_day_before = appointment.date_time - timedelta(days=1)
+            # Ajusta para 9h se for muito cedo
+            if one_day_before.hour < 9:
+                one_day_before = one_day_before.replace(hour=9, minute=0, second=0)
+            
+            reminder_1_day, created = AppointmentReminder.objects.get_or_create(
+                appointment=appointment,
+                reminder_type='1_day',
+                defaults={
+                    'scheduled_for': one_day_before,
+                    'sent': False
+                }
+            )
+            
+            # Lembrete 2 horas antes
+            two_hours_before = appointment.date_time - timedelta(hours=2)
+            
+            reminder_2_hours, created = AppointmentReminder.objects.get_or_create(
+                appointment=appointment,
+                reminder_type='2_hours',
+                defaults={
+                    'scheduled_for': two_hours_before,
+                    'sent': False
+                }
+            )
+            
+            logger.info(f"Lembretes criados para agendamento {appointment.id}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar lembretes: {e}")
     
     def _is_valid_business_hours(self, datetime_obj):
         """Valida se está dentro do horário de funcionamento"""
@@ -657,8 +668,8 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
             # Tenta buscar do Google Calendar
             from django.contrib.auth import get_user_model
             User = get_user_model()
-            admin_user = User.objects.get(is_superuser=True)
-            if self.calendar_service.load_credentials(admin_user):
+            admin_user = User.objects.filter(is_superuser=True).first()
+            if admin_user and self.calendar_service.load_credentials(admin_user):
                 available_slots = self.calendar_service.get_available_slots(date)
                 if available_slots:
                     logger.info(f"Slots do Google Calendar: {available_slots}")
@@ -713,61 +724,131 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
         """Resposta para horários fora do funcionamento de forma humana"""
         return "Opa! Esse horário a gente não atende... 😅\n\nNossos horários são:\nSegunda a sexta: 8h-12h e 14h-18h\nSábado: 8h-13h\n\nPode escolher outro horário?"
 
-    def _initialize_openai(self):
-        """Inicializa OpenAI"""
-        self.openai_available = False
+    def _initialize_ai(self):
+        """Inicializa Gemini ou OpenAI baseado na configuração"""
+        self.ai_available = False
         self.openai_client = None
+        self.gemini_model = None
+        
+        # Tenta inicializar Gemini primeiro se habilitado
+        if getattr(settings, 'GEMINI_ENABLED', False):
+            try:
+                if hasattr(settings, 'GEMINI_API_KEY') and settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != 'your-gemini-api-key-here':
+                    import google.generativeai as genai
+                    
+                    genai.configure(api_key=settings.GEMINI_API_KEY)
+                    self.gemini_model = genai.GenerativeModel('gemini-pro')
+                    
+                    self.ai_available = True
+                    logger.info("Gemini inicializado com sucesso!")
+                    return
+            except Exception as e:
+                logger.warning(f"Gemini não disponível ({e}) - tentando OpenAI")
+        
+        # Fallback para OpenAI
         try:
             if hasattr(settings, 'OPENAI_API_KEY') and settings.OPENAI_API_KEY and settings.OPENAI_API_KEY != 'your-openai-api-key-here':
                 import openai
                 
-                # Inicialização simples e limpa
                 self.openai_client = openai.OpenAI(
                     api_key=settings.OPENAI_API_KEY
                 )
                 
-                self.openai_available = True
+                self.ai_available = True
                 logger.info("OpenAI inicializado com sucesso!")
             else:
-                self.openai_available = False
-                logger.warning("OpenAI API key não configurada - usando fallback inteligente")
+                logger.warning("Nenhuma API key válida configurada - usando fallback inteligente")
         except Exception as e:
             logger.warning(f"OpenAI não disponível ({e}) - usando fallback inteligente")
-            self.openai_available = False
             
-        logger.info(f"OpenAI inicializado - Disponível: {self.openai_available}")
+        logger.info(f"AI inicializado - Disponível: {self.ai_available}")
+    
+    def _generate_ai_response(self, messages):
+        """Gera resposta usando Gemini ou OpenAI baseado na configuração"""
+        if self.gemini_model:
+            return self._generate_gemini_response(messages)
+        elif self.openai_client:
+            return self._generate_openai_response(messages)
+        else:
+            raise Exception("Nenhuma API de IA disponível")
+    
+    def _generate_gemini_response(self, messages):
+        """Gera resposta usando Google Gemini"""
+        try:
+            # Converte formato OpenAI para Gemini
+            conversation_text = self._convert_messages_to_gemini_format(messages)
+            
+            response = self.gemini_model.generate_content(
+                conversation_text,
+                generation_config={
+                    'temperature': 0.7,
+                    'max_output_tokens': 300,
+                }
+            )
+            
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Erro no Gemini: {e}")
+            raise
+    
+    def _generate_openai_response(self, messages):
+        """Gera resposta usando OpenAI"""
+        try:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                max_tokens=300,
+                temperature=0.7
+            )
+            
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Erro no OpenAI: {e}")
+            raise
+    
+    def _convert_messages_to_gemini_format(self, messages):
+        """Converte mensagens do formato OpenAI para Gemini"""
+        conversation_parts = []
+        
+        for message in messages:
+            role = message.get('role', '')
+            content = message.get('content', '')
+            
+            if role == 'system':
+                conversation_parts.append(f"Instrução: {content}")
+            elif role == 'user':
+                conversation_parts.append(f"Usuário: {content}")
+            elif role == 'assistant':
+                conversation_parts.append(f"Assistente: {content}")
+        
+        return "\n\n".join(conversation_parts)
         
     def _send_delayed_message(self, client_whatsapp, message, delay_seconds=3):
-        """Envia mensagem com delay para simular digitação humana"""
-        def send_after_delay():
-            time.sleep(delay_seconds)
-            try:
-                # Importa o serviço de evolução aqui para evitar imports circulares
-                from .evolution_service import EvolutionService
-                evolution_service = EvolutionService()
-                result = evolution_service.send_message(client_whatsapp, message)
-                
-                # Salva no banco
-                try:
-                    from authentication.models import Client as AuthClient
-                    auth_client = AuthClient.objects.filter(whatsapp=client_whatsapp).first()
-                    if auth_client:
-                        WhatsAppMessage.objects.create(
-                            client=auth_client,
-                            content=message,
-                            message_type='SENT',
-                            direction='SENT',
-                            message_id=result.get('id', '') if result else ''
-                        )
-                except Exception as e:
-                    logger.warning(f"Erro ao salvar mensagem delayed: {e}")
-                    
-                logger.info(f"[DELAYED] Mensagem enviada após {delay_seconds}s: {message[:50]}...")
-            except Exception as e:
-                logger.error(f"Erro ao enviar mensagem delayed: {e}")
-        
-        # Executa em thread separada
-        threading.Thread(target=send_after_delay, daemon=True).start()
+        """
+        Envia mensagem com delay usando Celery (OTIMIZADO)
+        Substitui o threading por sistema de filas robusto
+        """
+        try:
+            # Importa o serviço assíncrono
+            from .async_message_service import AsyncMessageService
+            
+            async_service = AsyncMessageService()
+            
+            # Agenda mensagem com delay usando Celery
+            result = async_service.send_delayed_message(
+                phone=client_whatsapp,
+                message=message,
+                delay_seconds=delay_seconds,
+                client_whatsapp=client_whatsapp
+            )
+            
+            logger.info(f"[DELAYED] Mensagem agendada com delay de {delay_seconds}s para {client_whatsapp} (task: {result.get('task_id')})")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Erro ao agendar mensagem delayed: {e}")
+            return None
         
     def _split_long_message(self, message, max_length=150):
         """Divide mensagens longas em partes menores"""
@@ -828,16 +909,8 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
     def _update_conversation_context(self, client_whatsapp, message_text, client_name=None):
         """Atualiza o contexto conversacional do cliente"""
         if client_whatsapp not in self.conversation_context:
-            self.conversation_context[client_whatsapp] = {
-                'messages': [],
-                'client_name': client_name,
-                'last_appointment_search': None,
-                'current_appointments': None,
-                'conversation_state': 'initial',
-                'pending_appointment': None,  # Para agendamentos em processo
-                'last_availability_check': None,  # Última consulta de disponibilidade
-                'conversation_summary': []  # Resumo das últimas interações importantes
-            }
+            # Carrega contexto do banco de dados (dia atual + dia anterior)
+            self.conversation_context[client_whatsapp] = self._load_conversation_from_database(client_whatsapp, client_name)
         
         context = self.conversation_context[client_whatsapp]
         
@@ -882,6 +955,134 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
             logger.warning(f"Erro ao buscar agendamentos existentes: {e}")
             
         logger.info(f"[CONTEXT] Cliente {client_whatsapp}: {len(context['messages'])} mensagens, {len(context.get('current_appointments', []))} agendamentos")
+    
+    def _load_conversation_from_database(self, client_whatsapp, client_name=None):
+        """Carrega contexto conversacional do banco de dados (dia atual + dia anterior)"""
+        try:
+            from authentication.models import Client as AuthClient
+            
+            # Busca cliente no banco
+            auth_client = AuthClient.objects.filter(whatsapp=client_whatsapp).first()
+            if not auth_client:
+                logger.info(f"[DATABASE] Cliente {client_whatsapp} não encontrado, criando contexto vazio")
+                return self._create_empty_context(client_name)
+            
+            # Define período: hoje + ontem
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+            start_datetime = datetime.combine(yesterday, datetime.min.time())
+            end_datetime = datetime.combine(today, datetime.max.time())
+            
+            # Busca mensagens dos últimos 2 dias
+            database_messages = WhatsAppMessage.objects.filter(
+                client=auth_client,
+                timestamp__gte=start_datetime,
+                timestamp__lte=end_datetime
+            ).order_by('timestamp')[:50]  # Máximo 50 mensagens para não sobrecarregar
+            
+            logger.info(f"[DATABASE] Carregadas {database_messages.count()} mensagens dos últimos 2 dias para {client_whatsapp}")
+            
+            # Inicializa contexto
+            context = self._create_empty_context(client_name or auth_client.name)
+            
+            # Converte mensagens do banco para formato interno
+            for db_msg in database_messages:
+                message_type = 'user' if db_msg.direction == 'RECEIVED' else 'assistant'
+                
+                # Extrai informações de intent se for mensagem do usuário
+                intent_info = {}
+                if message_type == 'user':
+                    intent_info = self._extract_conversation_intent(db_msg.content)
+                
+                context['messages'].append({
+                    'timestamp': db_msg.timestamp,
+                    'content': db_msg.content,
+                    'type': message_type,
+                    'intent': intent_info,
+                    'date': db_msg.timestamp.date(),
+                    'from_database': True  # Marca que veio do banco
+                })
+            
+            # Reconstrói o resumo conversacional baseado no histórico
+            context['conversation_summary'] = self._rebuild_conversation_summary(context['messages'])
+            
+            # Detecta último estado de disponibilidade/agendamento pendente
+            self._rebuild_conversation_state(context)
+            
+            logger.info(f"[DATABASE] Contexto carregado: {len(context['messages'])} mensagens, resumo: {len(context['conversation_summary'])} itens")
+            
+            return context
+            
+        except Exception as e:
+            logger.error(f"Erro ao carregar contexto do banco: {e}")
+            return self._create_empty_context(client_name)
+    
+    def _create_empty_context(self, client_name=None):
+        """Cria contexto vazio padrão"""
+        return {
+            'messages': [],
+            'client_name': client_name,
+            'last_appointment_search': None,
+            'current_appointments': None,
+            'conversation_state': 'initial',
+            'pending_appointment': None,
+            'last_availability_check': None,
+            'conversation_summary': []
+        }
+    
+    def _rebuild_conversation_summary(self, messages):
+        """Reconstrói resumo conversacional baseado no histórico de mensagens"""
+        summary = []
+        
+        for msg in messages[-10:]:  # Analisa últimas 10 mensagens
+            if msg['type'] == 'user' and msg.get('intent'):
+                intent = msg['intent']
+                
+                if intent.get('type') == 'availability' and intent.get('datetime_mentioned'):
+                    date_str = intent['datetime_mentioned'].strftime('%d/%m às %H:%M')
+                    summary.append(f"Cliente perguntou disponibilidade para {date_str}")
+                    
+                elif intent.get('type') == 'appointment' and intent.get('datetime_mentioned'):
+                    date_str = intent['datetime_mentioned'].strftime('%d/%m às %H:%M')
+                    summary.append(f"Cliente solicitou agendamento para {date_str}")
+                    
+                elif intent.get('type') == 'confirmation':
+                    summary.append("Cliente confirmou interesse em agendar")
+                    
+                elif intent.get('type') == 'cancellation':
+                    summary.append("Cliente mencionou cancelamento")
+        
+        return summary[-5:]  # Mantém apenas últimos 5 itens
+    
+    def _rebuild_conversation_state(self, context):
+        """Reconstrói estado da conversa baseado no histórico"""
+        messages = context['messages']
+        
+        # Procura última consulta de disponibilidade não respondida
+        for msg in reversed(messages[-10:]):
+            if (msg['type'] == 'user' and 
+                msg.get('intent', {}).get('type') == 'availability' and 
+                msg.get('intent', {}).get('datetime_mentioned')):
+                
+                context['last_availability_check'] = {
+                    'datetime': msg['intent']['datetime_mentioned'],
+                    'timestamp': msg['timestamp'],
+                    'message': msg['content']
+                }
+                break
+        
+        # Procura agendamento pendente
+        for msg in reversed(messages[-5:]):
+            if (msg['type'] == 'user' and 
+                msg.get('intent', {}).get('type') == 'appointment' and 
+                msg.get('intent', {}).get('datetime_mentioned')):
+                
+                context['pending_appointment'] = {
+                    'datetime': msg['intent']['datetime_mentioned'],
+                    'timestamp': msg['timestamp'],
+                    'status': 'from_history'
+                }
+                break
         
     def _extract_conversation_intent(self, message_text):
         """Extrai informações contextuais importantes da mensagem"""
@@ -1019,35 +1220,50 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
         if context.get('current_appointments'):
             context_text += f"Agendamentos já confirmados:\n"
             for apt in context['current_appointments']:
-                apt_date = apt.date_time.strftime('%d/%m/%Y às %H:%M')
+                # Converter para timezone local do Brasil para exibição correta
+                apt_local = apt.date_time.astimezone(self.timezone)
+                apt_date = apt_local.strftime('%d/%m/%Y às %H:%M')
                 context_text += f"- {apt_date}\n"
             context_text += "\n"
             
-        # Histórico da conversa com detecção de mudanças de dia (últimas 12 mensagens com contexto)
-        recent_messages = context['messages'][-12:]
+        # Histórico da conversa com detecção de mudanças de dia (últimas 15 mensagens com contexto)
+        recent_messages = context['messages'][-15:]
         if len(recent_messages) > 1:  # Se há histórico
-            context_text += "HISTÓRICO DA CONVERSA (últimas mensagens):\n"
+            context_text += "HISTÓRICO DA CONVERSA (últimas mensagens - 2 dias):\n"
             current_date = None
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
             
             for msg in recent_messages[:-1]:  # Exclui a mensagem atual
                 msg_date = msg.get('date')
                 timestamp = msg['timestamp'].strftime('%H:%M') if hasattr(msg['timestamp'], 'strftime') else "agora"
                 intent_type = msg.get('intent', {}).get('type', 'general')
+                from_db = msg.get('from_database', False)
                 
-                # Detecta mudança de dia
+                # Detecta mudança de dia com contexto mais claro
                 if msg_date and msg_date != current_date:
                     if current_date is not None:  # Não é a primeira mensagem
-                        context_text += "--- NOVA CONVERSA (outro dia) ---\n"
+                        context_text += "\n--- NOVA CONVERSA (dia diferente) ---\n"
+                    
+                    # Mostra qual dia é
+                    if msg_date == today:
+                        date_label = "HOJE"
+                    elif msg_date == yesterday:
+                        date_label = "ONTEM"
                     else:
-                        date_str = msg_date.strftime('%d/%m') if msg_date else "hoje"
-                        context_text += f"=== Conversa do dia {date_str} ===\n"
+                        date_label = msg_date.strftime('%d/%m')
+                    
+                    context_text += f"=== {date_label} ({msg_date.strftime('%d/%m')}) ===\n"
                     current_date = msg_date
                 
-                # Formata tipo de mensagem
+                # Indica origem da mensagem se veio do banco
+                source_indicator = " [BD]" if from_db else ""
+                
+                # Formata tipo de mensagem com mais contexto
                 if msg['type'] == 'user':
-                    context_text += f"Cliente ({timestamp}) [{intent_type}]: {msg['content']}\n"
+                    context_text += f"Cliente ({timestamp}){source_indicator} [{intent_type}]: {msg['content']}\n"
                 else:
-                    context_text += f"Assistente ({timestamp}): {msg['content']}\n"
+                    context_text += f"Assistente ({timestamp}){source_indicator}: {msg['content']}\n"
                     
             context_text += "\n🎯 IMPORTANTE: Seja TOTALMENTE coerente com esta conversa. Não ignore o contexto!\n"
             context_text += "Se há uma conversa de outro dia, considere que pode ser uma nova interação.\n"
@@ -1235,10 +1451,10 @@ INSTRUÇÕES PARA ESTA RESPOSTA:
         try:
             from django.contrib.auth import get_user_model
             User = get_user_model()
-            admin_user = User.objects.get(is_superuser=True)
+            admin_user = User.objects.filter(is_superuser=True).first()
             
             # Se Google Calendar não estiver conectado, retorna sem alteração
-            if not self.calendar_service.load_credentials(admin_user):
+            if not admin_user or not self.calendar_service.load_credentials(admin_user):
                 return appointments
             
             valid_appointments = []

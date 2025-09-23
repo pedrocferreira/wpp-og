@@ -6,7 +6,8 @@ from .models import EvolutionConfig, WhatsAppMessage
 from authentication.models import Client as AuthClient
 from datetime import datetime, timedelta
 import re
-from appointments.models import Client as AppointmentClient, ConversationState, Appointment
+from appointments.models import Appointment
+from authentication.models import Client as AppointmentClient
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,38 @@ class EvolutionService:
         return response.json()
 
     def send_message(self, phone: str, message: str, media_url: str = None):
-        """Envia mensagem via Evolution API"""
+        """
+        Envia mensagem via Evolution API de forma assíncrona (OTIMIZADO)
+        Para casos urgentes onde é necessário resposta imediata, use send_message_sync()
+        """
+        try:
+            # Importa o serviço assíncrono
+            from .async_message_service import AsyncMessageService
+            
+            async_service = AsyncMessageService()
+            
+            # Envia de forma assíncrona por padrão
+            result = async_service.send_message_async(
+                phone=phone,
+                message=message,
+                media_url=media_url,
+                client_whatsapp=phone,
+                priority='normal'
+            )
+            
+            logger.info("Mensagem agendada assincronamente para %s (task: %s)", 
+                       phone, result.get('task_id'))
+            
+            return result
+            
+        except Exception as e:
+            logger.error("Erro ao agendar mensagem assíncrona: %s", str(e))
+            return None
+    
+    def send_message_sync(self, phone: str, message: str, media_url: str = None):
+        """
+        Envia mensagem de forma síncrona (usar apenas quando necessário)
+        """
         url = f"{self.base_url}/message/sendText/{self.config.instance_id}"
         
         data = {
@@ -68,20 +100,16 @@ class EvolutionService:
         if media_url:
             data["mediaUrl"] = media_url
             
-        logger.info("Enviando mensagem para %s: %s", phone, message[:100])
-        logger.info("URL: %s", url)
-        logger.info("Headers: %s", json.dumps(self.headers))
-        logger.info("Data: %s", json.dumps(data))
+        logger.info("Enviando mensagem SÍNCRONA para %s: %s", phone, message[:100])
         
         try:
-            response = requests.post(url, headers=self.headers, json=data)
+            response = requests.post(url, headers=self.headers, json=data, timeout=30)
             response.raise_for_status()
             result = response.json()
-            logger.info("Resposta da API: %s", json.dumps(result))
-            logger.info("Mensagem enviada com sucesso para %s: %s", phone, json.dumps(result))
+            logger.info("Mensagem síncrona enviada com sucesso para %s", phone)
             return result
         except requests.exceptions.RequestException as e:
-            logger.error("Erro ao enviar mensagem: %s", str(e))
+            logger.error("Erro ao enviar mensagem síncrona: %s", str(e))
             if hasattr(e, 'response') and e.response is not None:
                 logger.error("Resposta de erro: %s", e.response.text)
             return None

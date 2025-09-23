@@ -1,4 +1,4 @@
-#!/home/pedro/wpp-og/whatsapp_backend/whatsapp_backend/venv/bin/python3
+#!/home/Elo/wpp-og/whatsapp_backend/whatsapp_backend/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

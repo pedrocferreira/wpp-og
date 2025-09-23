@@ -4867,7 +4867,7 @@ AI_ASSISTANT_NAME = 'Elô'
 Agora vou criar um superusuário para você poder fazer login:
 
 Agora você pode tentar fazer login com as seguintes credenciais:
-- Usuário: pedro
+- Usuário: Elo
 - Senha: 123
 
 Se ainda houver problemas, me avise! Também precisamos criar as rotas para appointments e clients, mas vamos resolver um problema por vez.
@@ -5232,7 +5232,7 @@ export default App;
 
 Agora você deve ver a página de login quando não estiver autenticado, e o layout com menu lateral só aparecerá quando estiver logado. Tente acessar a aplicação novamente e fazer login com as credenciais:
 
-- Usuário: pedro
+- Usuário: Elo
 - Senha: 123
 
 Se ainda houver algum problema, me avise!

@@ -17,6 +17,7 @@ import { ApiService } from '../../services/api.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { FormBuilder } from '@angular/forms';
+import { AnalyticsDashboardComponent } from '../analytics/analytics-dashboard.component';
 
 interface GoogleCalendarStatus {
   connected: boolean;
@@ -59,7 +60,8 @@ interface AISettings {
     MatTabsModule,
     MatProgressSpinnerModule,
     FormsModule,
-    DatePipe
+    DatePipe,
+    AnalyticsDashboardComponent
   ],
   template: `
     <div class="dashboard-container">
@@ -67,15 +69,22 @@ interface AISettings {
       <div class="dashboard-header">
         <h1 class="dashboard-title">
           <mat-icon>dashboard</mat-icon>
-          Dashboard de Atendimentos
+          Painel de Controle Elô
         </h1>
-        <p class="dashboard-subtitle">Gerencie seus atendimentos, configurações e integrações</p>
+        <p class="dashboard-subtitle">Gerencie atendimentos, configurações e análises do seu sistema inteligente</p>
       </div>
 
       <!-- Tabs principais -->
       <mat-tab-group class="main-tabs" [(selectedIndex)]="selectedTabIndex">
         
-        <!-- Tab 1: Visão Geral -->
+        <!-- Tab 1: Analytics Avançado -->
+        <mat-tab label="Analytics Avançado">
+          <div class="tab-content">
+            <app-analytics-dashboard></app-analytics-dashboard>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: Visão Geral -->
         <mat-tab label="Visão Geral">
           <div class="tab-content">
             
@@ -117,7 +126,7 @@ interface AISettings {
                     <mat-icon>message</mat-icon>
                   </div>
                   <div class="metric-content">
-                    <div class="metric-title">Mensagens WhatsApp</div>
+                    <div class="metric-title">Mensagens Elô</div>
                     <div class="metric-values">
                       <div class="primary-value">{{systemStats.messages?.today || 0}}</div>
                       <div class="secondary-value">Hoje</div>

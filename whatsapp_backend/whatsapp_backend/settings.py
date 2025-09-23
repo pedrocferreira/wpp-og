@@ -108,16 +108,25 @@ WSGI_APPLICATION = 'whatsapp_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'whatsapp_db'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'postgres123'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+# Database configuration - supports both PostgreSQL and SQLite
+if os.getenv('DB_ENGINE') == 'sqlite3':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / os.getenv('DB_NAME', 'db.sqlite3'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'whatsapp_db'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'postgres123'),
+            'HOST': os.getenv('DB_HOST', 'postgres_postgres'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -142,9 +151,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -200,7 +209,7 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://0.0.0.0:6379
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
+CELERY_TIMEZONE = 'America/Sao_Paulo'
 
 # Celery Beat Configuration
 CELERY_BEAT_SCHEDULE_FILENAME = os.path.join(BASE_DIR, 'beat', 'celerybeat-schedule')
@@ -209,12 +218,15 @@ CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 # WhatsApp Evolution API Configuration
 EVOLUTION_API_URL = os.getenv('EVOLUTION_API_URL', 'https://evo.og-trk.xyz')
 EVOLUTION_API_KEY = os.getenv('EVOLUTION_API_KEY', '067CD1A2E662-483F-A776-C977DED90692')
-EVOLUTION_INSTANCE_ID = os.getenv('EVOLUTION_INSTANCE_ID', 'pedro')
+EVOLUTION_INSTANCE_ID = os.getenv('EVOLUTION_INSTANCE_ID', 'admin')
 
+# AI Configuration
 # OpenAI Configuration
-# Para usar OpenAI, substitua 'your-openai-api-key-here' pela sua chave real
-# Exemplo: OPENAI_API_KEY = 'sk-1234567890abcdef...'
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'your-openai-api-key-here')
+
+# Gemini Configuration
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'your-gemini-api-key-here')
+GEMINI_ENABLED = os.getenv('GEMINI_ENABLED', 'false').lower() == 'true'
 
 # AI Assistant Name
 AI_ASSISTANT_NAME = os.getenv('AI_ASSISTANT_NAME', 'Elô')

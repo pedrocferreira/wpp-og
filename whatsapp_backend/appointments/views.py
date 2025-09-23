@@ -12,6 +12,7 @@ from django.utils import timezone
 from django.conf import settings
 import json
 import logging
+import pytz
 
 from .models import Appointment, Client
 from whatsapp.models import Message
@@ -58,13 +59,18 @@ def get_available_time_slots(request):
             ]
         
         # Buscar agendamentos já existentes para esta data
+        # Converter para timezone local para busca correta
+        tz = pytz.timezone('America/Sao_Paulo')
         existing_appointments = Appointment.objects.filter(
             date_time__date=date,
             status__in=['scheduled', 'confirmed']
-        ).values_list('date_time__time', flat=True)
+        ).values_list('date_time', flat=True)
+        
+        # Converter horários para timezone local para comparação
+        existing_appointments_local = [apt.astimezone(tz) for apt in existing_appointments]
         
         # Converter para string para comparação
-        existing_times = [t.strftime('%H:%M') for t in existing_appointments]
+        existing_times = [apt.strftime('%H:%M') for apt in existing_appointments_local]
         
         # Filtrar horários disponíveis
         available_slots = [hour for hour in available_hours if hour not in existing_times]
@@ -114,8 +120,10 @@ def book_appointment(request):
         # Criar datetime do agendamento
         date_obj = datetime.strptime(data['date'], '%Y-%m-%d').date()
         time_obj = datetime.strptime(data['time'], '%H:%M').time()
+        # Combinar data e hora no timezone local do Brasil
+        naive_datetime = datetime.combine(date_obj, time_obj)
         appointment_datetime = timezone.make_aware(
-            datetime.combine(date_obj, time_obj)
+            naive_datetime, timezone=pytz.timezone('America/Sao_Paulo')
         )
         
         # Verificar se horário ainda está disponível
@@ -127,14 +135,82 @@ def book_appointment(request):
         if existing:
             return Response({'error': 'Este horário não está mais disponível'}, status=400)
         
-        # Criar agendamento
+        # Tentar integração com Google Calendar
+        google_event = None
+        try:
+            from whatsapp.calendar_service import GoogleCalendarService
+            from django.contrib.auth import get_user_model
+            
+            User = get_user_model()
+            admin_user = User.objects.filter(is_superuser=True).first()
+            
+            if admin_user:
+                calendar_service = GoogleCalendarService()
+                if calendar_service.load_credentials(admin_user):
+                    # Cria evento no Google Calendar
+                    google_event = calendar_service.create_appointment(
+                        client.name,
+                        whatsapp,
+                        appointment_datetime,
+                        appointment_datetime + timedelta(hours=1),
+                        f"Consulta {data['consultation_type']} agendada via sistema online"
+                    )
+                    logger.info(f"Evento criado no Google Calendar: {google_event.get('id') if google_event else 'Erro'}")
+                else:
+                    logger.warning("Credenciais Google Calendar não carregadas")
+            else:
+                logger.warning("Usuário admin não encontrado para Google Calendar")
+                
+        except Exception as e:
+            logger.error(f"Erro na integração Google Calendar: {e}")
+            # Não falha o agendamento se Google Calendar der erro
+
+        # Criar agendamento no banco local
         appointment = Appointment.objects.create(
             client=client,
             date_time=appointment_datetime,
+            google_calendar_event_id=google_event.get('id') if google_event else None,
             status='scheduled',
             source='site',
             description=f"Consulta {data['consultation_type']} agendada via sistema online"
         )
+        
+        # Criar lembretes automáticos
+        try:
+            from appointments.models import AppointmentReminder
+            
+            # Lembrete 1 dia antes
+            one_day_before = appointment_datetime - timedelta(days=1)
+            if one_day_before.hour < 9:
+                one_day_before = one_day_before.replace(hour=9, minute=0, second=0)
+            
+            if one_day_before > timezone.now():
+                AppointmentReminder.objects.get_or_create(
+                    appointment=appointment,
+                    reminder_type='1_day',
+                    defaults={
+                        'scheduled_for': one_day_before,
+                        'sent': False
+                    }
+                )
+            
+            # Lembrete 2 horas antes
+            two_hours_before = appointment_datetime - timedelta(hours=2)
+            if two_hours_before > timezone.now():
+                AppointmentReminder.objects.get_or_create(
+                    appointment=appointment,
+                    reminder_type='2_hours',
+                    defaults={
+                        'scheduled_for': two_hours_before,
+                        'sent': False
+                    }
+                )
+            
+            logger.info(f"Lembretes criados para agendamento {appointment.id}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar lembretes: {e}")
+            # Não falha o agendamento se criar lembretes der erro
         
         # Enviar confirmação via WhatsApp
         try:

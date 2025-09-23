@@ -1,15 +1,12 @@
 <!-- Layout principal da aplicação -->
 <div class="app-container" [ngClass]="{'no-header': !showLayout}">
   
+  <!-- Navbar moderna - aparece apenas quando logado -->
+  <app-navbar *ngIf="showLayout"></app-navbar>
+
   <!-- Header superior - aparece apenas quando showLayout for true -->
   <header class="app-header" *ngIf="showLayout">
     <div class="header-content">
-      <!-- Logo e título -->
-      <div class="brand">
-        <mat-icon class="brand-icon">chat</mat-icon>
-        <h1 class="brand-title">WhatsApp Atendimento</h1>
-      </div>
-
       <!-- Navegação por tabs -->
       <nav class="nav-tabs">
         <a routerLink="/dashboard" 
@@ -22,34 +19,24 @@
            routerLinkActive="active" 
            class="nav-tab">
           <mat-icon>calendar_today</mat-icon>
-          <span>Google Calendar</span>
+          <span>Agenda Google</span>
         </a>
         <a routerLink="/chat" 
            routerLinkActive="active" 
            class="nav-tab">
           <mat-icon>chat_bubble</mat-icon>
-          <span>Chat</span>
+          <span>Conversas</span>
         </a>
       </nav>
-
-      <!-- Ações do usuário -->
-      <div class="user-actions">
-        <button mat-icon-button class="action-btn" matTooltip="Notificações">
-          <mat-icon matBadge="3" matBadgeColor="warn">notifications</mat-icon>
-        </button>
-        <button mat-icon-button class="action-btn" matTooltip="Configurações">
-          <mat-icon>settings</mat-icon>
-        </button>
-        <button mat-icon-button class="action-btn" matTooltip="Sair" (click)="logout()">
-          <mat-icon>logout</mat-icon>
-        </button>
-      </div>
     </div>
   </header>
 
   <!-- Conteúdo principal -->
-  <main class="main-content" [ngClass]="{'full-height': !showLayout}">
+  <main class="main-content" [ngClass]="{'full-height': !showLayout, 'with-navbar': showLayout}">
     <router-outlet></router-outlet>
   </main>
 
 </div> 
+
+<!-- Toast notifications -->
+<app-toast></app-toast> 

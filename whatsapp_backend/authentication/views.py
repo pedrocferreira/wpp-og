@@ -23,10 +23,23 @@ class AuthViewSet(viewsets.GenericViewSet):
     def login(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
+            # Tenta autenticar usando email
             user = authenticate(
                 username=serializer.validated_data['email'],
                 password=serializer.validated_data['password']
             )
+            
+            # Se não encontrou por email, tenta por username
+            if not user:
+                try:
+                    user_obj = User.objects.get(email=serializer.validated_data['email'])
+                    user = authenticate(
+                        username=user_obj.username,
+                        password=serializer.validated_data['password']
+                    )
+                except User.DoesNotExist:
+                    user = None
+            
             if user:
                 refresh = RefreshToken.for_user(user)
                 user.is_online = True
@@ -55,6 +68,43 @@ class AuthViewSet(viewsets.GenericViewSet):
                 'refresh': str(refresh)
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['post'])
+    def setup_admin(self, request):
+        """Endpoint temporário para criar usuário admin"""
+        email = 'admin@admin.com'
+        password = 'admin123'
+        username = 'admin'
+        
+        # Remove usuário se existir
+        if User.objects.filter(email=email).exists():
+            User.objects.filter(email=email).delete()
+        
+        # Cria novo usuário
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name='Admin',
+            last_name='Sistema',
+            role='admin',
+            is_staff=True,
+            is_superuser=True
+        )
+        
+        # Gera token automaticamente
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'message': 'Usuário admin criado com sucesso!',
+            'user': UserSerializer(user).data,
+            'token': str(refresh.access_token),
+            'refresh': str(refresh),
+            'credentials': {
+                'email': email,
+                'password': password
+            }
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def logout(self, request):

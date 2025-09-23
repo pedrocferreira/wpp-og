@@ -49,7 +49,7 @@ Elô: "Opa! Consegui agendar sim! 🎉 Sua consulta está marcada para amanhã (
 
 ### WhatsApp (Evolution API)
 ```
-Instance: pedro
+Instance: Elo
 API Key: 067CD1A2E662-483F-A776-C977DED90692
 Webhook: https://155.133.22.207:8000/api/whatsapp/webhook/evolution/
 Status: ✅ Ativo
@@ -112,9 +112,9 @@ Calendário: primary
 - **Taxa de conversão**: 2.76%
 
 ### Próximos Agendamentos
-1. **Hoje 25/06 às 19:00** - Pedro 🤙 (WhatsApp + Google)
-2. **Amanhã 26/06 às 17:00** - Pedro 🤙 (WhatsApp + Google)
-3. **03/07 às 19:00** - Pedro 🤙 (WhatsApp + Google)
+1. **Hoje 25/06 às 19:00** - Elo 🤙 (WhatsApp + Google)
+2. **Amanhã 26/06 às 17:00** - Elo 🤙 (WhatsApp + Google)
+3. **03/07 às 19:00** - Elo 🤙 (WhatsApp + Google)
 
 ---
 
